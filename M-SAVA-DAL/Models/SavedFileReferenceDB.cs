@@ -6,10 +6,15 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Models
 {
-    public class SavedFileDB : IIdentifiableDB
+    public class SavedFileReferenceDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
         public required byte[] FileHash { get; set; }
         public required FileExtensionType FileExtension { get; set; }
+
+        // permissions
+        public required bool PublicDownload { get; set; } = false;
+        public required bool Restricted { get; set; } = false;
+        public AccessGroupDB? AccessGroup { get; set; } = null!;
     }
 }

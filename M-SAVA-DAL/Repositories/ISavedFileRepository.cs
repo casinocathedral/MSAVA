@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Repositories
 {
-    public interface ISavedFileRepository : IIdentifiableRepository<SavedFileDB>
+    public interface ISavedFileRepository : IIdentifiableRepository<SavedFileReferenceDB>
     {
-        string GetFilePath(SavedFileDB file);
-        byte[] GetFileBytes(SavedFileDB file);
-        FileStream GetFileStream(SavedFileDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read);
-        Task<FileStream> GetFileStreamAsync(SavedFileDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, CancellationToken cancellationToken = default);
-        bool FileExists(SavedFileDB file);
+        string GetFilePath(SavedFileReferenceDB file);
+        byte[] GetFileBytes(SavedFileReferenceDB file);
+        FileStream GetFileStream(SavedFileReferenceDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read);
+        Task<FileStream> GetFileStreamAsync(SavedFileReferenceDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, CancellationToken cancellationToken = default);
+        bool FileExists(SavedFileReferenceDB file);
 
         public Guid GetFileIdByHashAndExtension(byte[] fileHash, FileExtensionType extension);
         public bool FileExistsByHashAndExtension(byte[] fileHash, FileExtensionType extension);
 
-        void SaveFileFromBytes(SavedFileDB file, byte[] content, bool overwrite = false);
-        void SaveFileFromStream(SavedFileDB file, Stream content, bool overwrite = false);
-        Task SaveFileFromStreamAsync(SavedFileDB file, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
-        Task SaveFileFromFormFileAsync(SavedFileDB file, IFormFile formFile, bool overwrite = false, CancellationToken cancellationToken = default);
+        void SaveFileFromBytes(SavedFileReferenceDB file, byte[] content, bool overwrite = false);
+        void SaveFileFromStream(SavedFileReferenceDB file, Stream content, bool overwrite = false);
+        Task SaveFileFromStreamAsync(SavedFileReferenceDB file, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
+        Task SaveFileFromFormFileAsync(SavedFileReferenceDB file, IFormFile formFile, bool overwrite = false, CancellationToken cancellationToken = default);
     }
 }

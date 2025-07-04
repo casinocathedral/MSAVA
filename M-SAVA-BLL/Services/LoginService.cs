@@ -17,7 +17,7 @@ namespace M_SAVA_BLL.Services
     public class LoginService
     {
         private readonly IIdentifiableRepository<UserDB> _userRepository;
-        private readonly IIdentifiableRepository<JWTDB> _jwtRepository;
+        private readonly IIdentifiableRepository<JwtDB> _jwtRepository;
 
         // Jwt constants
         private readonly string _jwtSecret;
@@ -28,7 +28,7 @@ namespace M_SAVA_BLL.Services
         private const int HashIterations = 100_000;
         private const int HashByteSize = 32;
 
-        public LoginService(IIdentifiableRepository<UserDB> userRepository, IIdentifiableRepository<JWTDB> jwtRepository, string jwtSecret, string jwtIssuer)
+        public LoginService(IIdentifiableRepository<UserDB> userRepository, IIdentifiableRepository<JwtDB> jwtRepository, string jwtSecret, string jwtIssuer)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _jwtRepository = jwtRepository ?? throw new ArgumentNullException(nameof(jwtRepository));
@@ -44,12 +44,12 @@ namespace M_SAVA_BLL.Services
             if (user == null || !VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
                 return new LoginResponseDTO { Token = string.Empty };
 
-            JWTDB token = await GenerateJwtTokenAsync(user);
+            JwtDB token = await GenerateJwtTokenAsync(user);
 
             return new LoginResponseDTO { Token = token.TokenString };
         }
 
-        public async Task<JWTDB> GenerateJwtTokenAsync(UserDB user)
+        public async Task<JwtDB> GenerateJwtTokenAsync(UserDB user)
         {
             var issuedAt = DateTime.UtcNow;
             var expiresAt = issuedAt.AddHours(2);
@@ -77,7 +77,7 @@ namespace M_SAVA_BLL.Services
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            JWTDB jwtDb = new JWTDB
+            JwtDB jwtDb = new JwtDB
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,

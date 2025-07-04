@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Models
 {
-    public class JWTDB : IIdentifiableDB
+    public class JwtDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }

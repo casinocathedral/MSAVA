@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Repositories
 {
-    public class SavedFileRepository : IdentifiableRepository<SavedFileDB>, ISavedFileRepository
+    public class SavedFileRepository : IdentifiableRepository<SavedFileReferenceDB>, ISavedFileRepository
     {
         public static readonly string BackupDirectory =
            Path.Combine(AppContext.BaseDirectory, "Data", "Backups");
@@ -22,7 +22,7 @@ namespace M_SAVA_DAL.Repositories
         {
         }
 
-        public string GetFilePath(SavedFileDB file)
+        public string GetFilePath(SavedFileReferenceDB file)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string hashString = BitConverter.ToString(file.FileHash).Replace("-", "").ToLowerInvariant();
@@ -30,21 +30,21 @@ namespace M_SAVA_DAL.Repositories
             return Path.Combine(FilesDirectory, $"{hashString}.{extension}");
         }
 
-        public byte[]? GetFileBytes(SavedFileDB file)
+        public byte[]? GetFileBytes(SavedFileReferenceDB file)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);
             return File.Exists(path) ? File.ReadAllBytes(path) : null;
         }
 
-        public FileStream? GetFileStream(SavedFileDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read)
+        public FileStream? GetFileStream(SavedFileReferenceDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);
             return File.Exists(path) ? new FileStream(path, mode, access) : null;
         }
         
-        public async Task<FileStream?> GetFileStreamAsync(SavedFileDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, CancellationToken cancellationToken = default)
+        public async Task<FileStream?> GetFileStreamAsync(SavedFileReferenceDB file, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, CancellationToken cancellationToken = default)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);
@@ -53,7 +53,7 @@ namespace M_SAVA_DAL.Repositories
             return new FileStream(path, mode, access, FileShare.Read, 81920, useAsync: true);
         }
 
-        public bool FileExists(SavedFileDB file)
+        public bool FileExists(SavedFileReferenceDB file)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);
@@ -73,7 +73,7 @@ namespace M_SAVA_DAL.Repositories
             if (fileHash == null || fileHash.Length == 0)
                 throw new ArgumentNullException(nameof(fileHash), "Repository: fileHash parameter cannot be null or empty.");
 
-            SavedFileDB file = _context.SavedFiles
+            SavedFileReferenceDB file = _context.SavedFiles
                 .FirstOrDefault(f => f.FileExtension == extension && f.FileHash == fileHash);
 
             if (file == null)
@@ -82,7 +82,7 @@ namespace M_SAVA_DAL.Repositories
             return file.Id;
         }
 
-        public void SaveFileFromBytes(SavedFileDB file, byte[] content, bool overwrite = false)
+        public void SaveFileFromBytes(SavedFileReferenceDB file, byte[] content, bool overwrite = false)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             if (content == null) throw new ArgumentNullException(nameof(content), "Repository: content parameter cannot be null.");
@@ -96,7 +96,7 @@ namespace M_SAVA_DAL.Repositories
 
             File.WriteAllBytes(path, content);
         }
-        public void SaveFileFromStream(SavedFileDB file, Stream content, bool overwrite = false)
+        public void SaveFileFromStream(SavedFileReferenceDB file, Stream content, bool overwrite = false)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             if (content == null) throw new ArgumentNullException(nameof(content), "Repository: content stream parameter cannot be null.");
@@ -114,7 +114,7 @@ namespace M_SAVA_DAL.Repositories
             }
         }
 
-        public async Task SaveFileFromStreamAsync(SavedFileDB file, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task SaveFileFromStreamAsync(SavedFileReferenceDB file, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             if (content == null) throw new ArgumentNullException(nameof(content), "Repository: content stream parameter cannot be null.");
@@ -132,7 +132,7 @@ namespace M_SAVA_DAL.Repositories
             }
         }
 
-        public async Task SaveFileFromFormFileAsync(SavedFileDB file, IFormFile formFile, bool overwrite = false, CancellationToken cancellationToken = default)
+        public async Task SaveFileFromFormFileAsync(SavedFileReferenceDB file, IFormFile formFile, bool overwrite = false, CancellationToken cancellationToken = default)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             if (formFile == null) throw new ArgumentNullException(nameof(formFile), "Repository: formFile parameter cannot be null.");
@@ -150,7 +150,7 @@ namespace M_SAVA_DAL.Repositories
             }
         }
 
-        public void DeleteFileContent(SavedFileDB file)
+        public void DeleteFileContent(SavedFileReferenceDB file)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);
@@ -160,7 +160,7 @@ namespace M_SAVA_DAL.Repositories
             }
         }
 
-        public async Task DeleteFileContentAsync(SavedFileDB file, CancellationToken cancellationToken = default)
+        public async Task DeleteFileContentAsync(SavedFileReferenceDB file, CancellationToken cancellationToken = default)
         {
             if (file == null) throw new ArgumentNullException(nameof(file), "Repository: SavedFileDB parameter cannot be null.");
             string path = GetFilePath(file);

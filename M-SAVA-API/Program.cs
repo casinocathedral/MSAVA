@@ -18,7 +18,8 @@ builder.Services.AddDbContext<BaseDataContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
-builder.Services.AddScoped<IIdentifiableRepository<JWTDB>, IdentifiableRepository<JWTDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<InviteCodeDB>, IdentifiableRepository<InviteCodeDB>>();
 builder.Services.AddScoped<ISavedFileRepository, SavedFileRepository>();
 

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace M_SAVA_BLL.Utils
     {
         public static bool IsFileContentValid(FileStream fileStream, string extension)
         {
-            if (fileStream == null || string.IsNullOrWhiteSpace(extension))
+            if (string.IsNullOrWhiteSpace(extension))
                 return false;
 
             extension = extension.Trim().TrimStart('.').ToLowerInvariant();
@@ -131,27 +132,15 @@ namespace M_SAVA_BLL.Utils
             };
         }
 
-        // Helper to get file bytes for hashing (prefers Bytes, then Stream, then IFormFile)
-        public static byte[] GetFileBytesForHashing(FileToSaveDTO dto)
+        // Helper to get file bytes for hashing (now only uses Stream)
+        public static byte[] GetFileBytesFromStream(Stream dto)
         {
-            if (dto.Bytes != null && dto.Bytes.Length > 0)
-                return dto.Bytes;
-
-            if (dto.Stream != null && dto.Stream.Length > 0)
+            if (dto.Length > 0)
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    dto.Stream.Position = 0;
-                    dto.Stream.CopyTo(ms);
-                    return ms.ToArray();
-                }
-            }
-
-            if (dto.FormFile != null && dto.FormFile.Length > 0)
-            {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    dto.FormFile.CopyTo(ms);
+                    dto.Position = 0;
+                    dto.CopyTo(ms);
                     return ms.ToArray();
                 }
             }
@@ -174,43 +163,44 @@ namespace M_SAVA_BLL.Utils
             return FileExtensionType.Unknown;
         }
 
-        // Maps FileToSaveDTO to SavedFileDB for saving in the database
-        public static SavedFileDB MapFileDTOToDB(FileToSaveDTO dto)
+        // Maps FileToSaveDTO to SavedFileReferenceDB for saving in the database
+        public static SavedFileReferenceDB MapFileDTOToDB(FileToSaveDTO dto)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-            byte[] fileBytes = FileUtils.GetFileBytesForHashing(dto);
-            if (fileBytes == null || fileBytes.Length == 0)
-                throw new ArgumentException("File content is required for hashing and saving.");
-
             byte[] fileHash;
             using (SHA256 sha256 = SHA256.Create())
             {
-                fileHash = sha256.ComputeHash(fileBytes);
+                fileHash = sha256.ComputeHash(dto.Stream);
             }
 
             FileExtensionType extension = FileUtils.ParseFileExtension(dto.FileExtension);
 
-            SavedFileDB savedFileDb = new SavedFileDB
+            AccessGroupDB accessGroup = null;
+            if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
+            {
+                accessGroup = new AccessGroupDB { Id = dto.AccessGroup.Value };
+            }
+
+            SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
             {
                 Id = dto.Id ?? Guid.Empty,
                 FileHash = fileHash,
-                FileExtension = extension
+                FileExtension = extension,
+                PublicDownload = dto.PublicDownload,
+                Restricted = dto.Restricted,
+                AccessGroup = accessGroup
             };
 
             return savedFileDb;
         }
 
         // Maps SavedFileDB to ReturnFileDTO for returning to the client
-        public static ReturnFileDTO MapDBToReturnFileDTO(SavedFileDB db, byte[]? fileBytes = null, Stream? fileStream = null)
+        public static ReturnFileDTO MapDBToReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
         {
-            if (db == null) throw new ArgumentNullException(nameof(db));
-
             string fileName = GetFileName(db);
 
             string fileExtension = GetFileExtension(db);
 
-            string contentType = GetContentType(fileExtension);
+            string contentType = MetadataUtils.GetContentType(fileExtension);
 
             Stream stream;
             if (fileBytes != null && fileBytes.Length > 0)
@@ -239,129 +229,57 @@ namespace M_SAVA_BLL.Utils
             };
         }
 
-        public static string GetFileName(SavedFileDB db)
+        public static string GetFileName(SavedFileReferenceDB db)
         {
             return BitConverter.ToString(db.FileHash).Replace("-", "").ToLowerInvariant();
         }
 
-        public static string GetFileExtension(SavedFileDB db)
+        public static string GetFileExtension(SavedFileReferenceDB db)
         {
             return db.FileExtension.ToString().TrimStart('_').ToLowerInvariant();
         }
 
-        public static string GetContentType(string extension)
+        public static SavedFileDataDB MapDtoToMetadataDB(
+            FileToSaveDTO dto,
+            SavedFileReferenceDB savedFileDb,
+            UserDB owner,
+            UserDB lastModifiedBy,
+            AccessGroupDB accessGroup,
+            bool publicViewing = false,
+            bool publicDownload = false,
+            bool restricted = false
+        )
         {
-            return extension.ToLowerInvariant() switch
+            ulong sizeInBytes = (ulong)dto.Stream.Length;
+
+            string checksum = BitConverter.ToString(savedFileDb.FileHash).Replace("-", "").ToLowerInvariant();
+
+            string mimeType = MetadataUtils.GetContentType(dto.FileExtension);
+
+            IQueryable<string> tags = (dto.Tags ?? new List<string>()).AsQueryable();
+            IQueryable<string> categories = (dto.Categories ?? new List<string>()).AsQueryable();
+
+            JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream);
+
+            return new SavedFileDataDB
             {
-                // Documents
-                "txt" => "text/plain",
-                "pdf" => "application/pdf",
-                "json" => "application/json",
-                "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "csv" => "text/csv",
-                "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                "rtf" => "application/rtf",
-                "html" => "text/html",
-                "xml" => "application/xml",
-                "md" => "text/markdown",
-                "odt" => "application/vnd.oasis.opendocument.text",
-                "ods" => "application/vnd.oasis.opendocument.spreadsheet",
-                "odp" => "application/vnd.oasis.opendocument.presentation",
-                "doc" => "application/msword",
-                "xls" => "application/vnd.ms-excel",
-                "ppt" => "application/vnd.ms-powerpoint",
-                "log" => "text/plain",
-                "yaml" => "application/x-yaml",
-                "ini" => "text/plain",
-
-                // Raster images
-                "webp" => "image/webp",
-                "png" => "image/png",
-                "jpeg" => "image/jpeg",
-                "jpg" => "image/jpeg",
-                "tiff" => "image/tiff",
-                "bmp" => "image/bmp",
-                "gif" => "image/gif",
-                "ico" => "image/x-icon",
-                "heic" => "image/heic",
-                "heif" => "image/heif",
-                "psd" => "image/vnd.adobe.photoshop",
-                "exr" => "image/aces",
-                "tga" => "image/x-targa",
-                "jp2" => "image/jp2",
-                "pbm" => "image/x-portable-bitmap",
-                "pgm" => "image/x-portable-graymap",
-                "ppm" => "image/x-portable-pixmap",
-                "xbm" => "image/x-xbitmap",
-                "xpm" => "image/x-xpixmap",
-                "dib" => "image/bmp",
-
-                // Vector images
-                "svg" => "image/svg+xml",
-                "eps" => "application/postscript",
-                "ai" => "application/postscript",
-                "wmf" => "image/wmf",
-                "emf" => "image/emf",
-                "cdr" => "application/cdr",
-                "cgm" => "image/cgm",
-                "dxf" => "image/vnd.dxf",
-                "dwg" => "image/vnd.dwg",
-                "sketch" => "application/octet-stream",
-                "fig" => "application/x-xfig",
-                "drw" => "application/octet-stream",
-                "vsd" => "application/vnd.visio",
-                "fla" => "application/octet-stream",
-                "swf" => "application/x-shockwave-flash",
-                "sai" => "application/octet-stream",
-                "svgz" => "image/svg+xml",
-                "hpgl" => "application/vnd.hp-hpgl",
-                "plt" => "application/plt",
-
-                // Audio
-                "wav" => "audio/wav",
-                "flac" => "audio/flac",
-                "mp3" => "audio/mpeg",
-                "aac" => "audio/aac",
-                "ogg" => "audio/ogg",
-                "m4a" => "audio/mp4",
-                "wma" => "audio/x-ms-wma",
-                "aiff" => "audio/aiff",
-                "opus" => "audio/opus",
-                "amr" => "audio/amr",
-                "ape" => "audio/ape",
-                "mpc" => "audio/mpc",
-                "wv" => "audio/wavpack",
-                "tta" => "audio/tta",
-                "dsf" => "audio/dsf",
-                "ra" => "audio/x-pn-realaudio",
-                "gsm" => "audio/gsm",
-                "au" => "audio/basic",
-                "vox" => "audio/voxware",
-
-                // Video
-                "webm" => "video/webm",
-                "avi" => "video/x-msvideo",
-                "mp4" => "video/mp4",
-                "ogv" => "video/ogg",
-                "mkv" => "video/x-matroska",
-                "mov" => "video/quicktime",
-                "wmv" => "video/x-ms-wmv",
-                "flv" => "video/x-flv",
-                "m4v" => "video/x-m4v",
-                "mpg" => "video/mpeg",
-                "mpeg" => "video/mpeg",
-                "3gp" => "video/3gpp",
-                "3g2" => "video/3gpp2",
-                "asf" => "video/x-ms-asf",
-                "rm" => "application/vnd.rn-realmedia",
-                "vob" => "video/dvd",
-                "ts" => "video/mp2t",
-                "mts" => "video/mp2t",
-                "m2ts" => "video/mp2t",
-                "f4v" => "video/x-f4v",
-
-                _ => "application/octet-stream"
+                Id = Guid.NewGuid(),
+                FileReference = savedFileDb,
+                SizeInBytes = sizeInBytes,
+                SavedAt = DateTime.Now,
+                LastModifiedAt = DateTime.Now,
+                LastModifiedBy = lastModifiedBy,
+                Checksum = checksum,
+                Name = dto.FileName,
+                Description = dto.Description ?? string.Empty,
+                MimeType = mimeType,
+                FileExtension = dto.FileExtension,
+                Tags = tags,
+                Categories = categories,
+                Owner = owner,
+                Metadata = metadata,
+                PublicViewing = publicViewing,
+                DownloadCount = 0,
             };
         }
     }

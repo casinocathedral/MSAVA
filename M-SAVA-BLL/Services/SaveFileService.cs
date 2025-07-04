@@ -11,6 +11,7 @@ using M_SAVA_BLL.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using M_SAVA_BLL.Utils;
+using System.Text.Json;
 
 namespace M_SAVA_BLL.Services
 {
@@ -26,10 +27,7 @@ namespace M_SAVA_BLL.Services
         // Create
         public Guid CreateFile(FileToSaveDTO dto)
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
-            SavedFileDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             if (_savedFileRepository.FileExistsByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension))
             {
@@ -49,10 +47,7 @@ namespace M_SAVA_BLL.Services
         // Update
         public void UpdateFile(FileToSaveDTO dto)
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
-            SavedFileDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             SaveFileContent(savedFileDb, dto, true);
 
@@ -71,61 +66,24 @@ namespace M_SAVA_BLL.Services
         }
 
         // Helper to save file content (sync)
-        private void SaveFileContent(SavedFileDB savedFileDb, FileToSaveDTO dto, bool overwrite)
+        private void SaveFileContent(SavedFileReferenceDB savedFileDb, FileToSaveDTO dto, bool overwrite)
         {
-            if (savedFileDb == null)
-                throw new ArgumentNullException(nameof(savedFileDb), "Service: SavedFileDB cannot be null.");
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
             string extension = dto.FileExtension;
-            Stream? contentStream = null;
-            bool disposeStream = false;
+            bool isValid = FileUtils.ValidateFileContent(dto.Stream, extension);
+            if (!isValid)
+                throw new ArgumentException("Service: File content does not match the provided extension.");
 
-            if (dto.Stream != null && dto.Stream.Length > 0)
-            {
-                contentStream = dto.Stream;
-            }
-            else if (dto.FormFile != null && dto.FormFile.Length > 0)
-            {
-                contentStream = dto.FormFile.OpenReadStream();
-                disposeStream = true;
-            }
-            else if (dto.Bytes != null && dto.Bytes.Length > 0)
-            {
-                contentStream = new MemoryStream(dto.Bytes);
-                disposeStream = true;
-            }
-            else
-            {
-                throw new ArgumentException("Service: No file content provided.");
-            }
+            dto.Stream.Position = 0;
+            dto.Stream.Position = 0;
 
-            try
-            {
-                contentStream.Position = 0;
-                bool isValid = FileUtils.ValidateFileContent(contentStream, extension);
-                if (!isValid)
-                    throw new ArgumentException("Service: File content does not match the provided extension.");
-                contentStream.Position = 0;
-
-                _savedFileRepository.SaveFileFromStream(savedFileDb, contentStream, overwrite);
-            }
-            finally
-            {
-                if (disposeStream && contentStream != null)
-                    contentStream.Dispose();
-            }
+            _savedFileRepository.SaveFileFromStream(savedFileDb, dto.Stream, overwrite);
         }
 
         // Async CRUD methods
         // Create
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
-            SavedFileDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             if (_savedFileRepository.FileExistsByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension))
             {
@@ -145,10 +103,7 @@ namespace M_SAVA_BLL.Services
         // Update
         public async Task UpdateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
-            SavedFileDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             _savedFileRepository.Update(savedFileDb);
             await _savedFileRepository.CommitAsync();
@@ -159,59 +114,23 @@ namespace M_SAVA_BLL.Services
         // Delete
         public async Task DeleteFileAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            if (id == Guid.Empty)
-                throw new ArgumentException("Service: File id cannot be empty.", nameof(id));
-
             await _savedFileRepository.DeleteByIdAsync(id);
             await _savedFileRepository.CommitAsync();
         }
 
         // Helper to save file content (async)
-        private async Task SaveFileContentAsync(SavedFileDB savedFileDb, FileToSaveDTO dto, bool overwrite, CancellationToken cancellationToken = default)
+        private async Task SaveFileContentAsync(SavedFileReferenceDB savedFileDb, FileToSaveDTO dto, bool overwrite, CancellationToken cancellationToken = default)
         {
-            if (savedFileDb == null)
-                throw new ArgumentNullException(nameof(savedFileDb), "Service: SavedFileDB cannot be null.");
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto), "Service: FileToSaveDTO cannot be null.");
-
             string extension = dto.FileExtension;
-            Stream? contentStream = null;
-            bool disposeStream = false;
+            Stream contentStream = dto.Stream;
 
-            if (dto.Stream != null && dto.Stream.Length > 0)
-            {
-                contentStream = dto.Stream;
-            }
-            else if (dto.FormFile != null && dto.FormFile.Length > 0)
-            {
-                contentStream = dto.FormFile.OpenReadStream();
-                disposeStream = true;
-            }
-            else if (dto.Bytes != null && dto.Bytes.Length > 0)
-            {
-                contentStream = new MemoryStream(dto.Bytes);
-                disposeStream = true;
-            }
-            else
-            {
-                throw new ArgumentException("Service: No file content provided.");
-            }
+            contentStream.Position = 0;
+            bool isValid = FileUtils.ValidateFileContent(contentStream, extension);
+            if (!isValid)
+                throw new ArgumentException("Service: File content does not match the provided extension.");
+            contentStream.Position = 0;
 
-            try
-            {
-                contentStream.Position = 0;
-                bool isValid = FileUtils.ValidateFileContent(contentStream, extension);
-                if (!isValid)
-                    throw new ArgumentException("Service: File content does not match the provided extension.");
-                contentStream.Position = 0;
-
-                await _savedFileRepository.SaveFileFromStreamAsync(savedFileDb, contentStream, overwrite, cancellationToken);
-            }
-            finally
-            {
-                if (disposeStream && contentStream != null)
-                    await contentStream.DisposeAsync();
-            }
+            await _savedFileRepository.SaveFileFromStreamAsync(savedFileDb, contentStream, overwrite, cancellationToken);
         }
     }
 }

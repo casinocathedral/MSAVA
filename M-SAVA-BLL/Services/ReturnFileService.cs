@@ -24,27 +24,27 @@ namespace M_SAVA_BLL.Services
 
         public ReturnFileDTO GetFileById(Guid id)
         {
-            SavedFileDB db = _savedFileRepository.GetById(id);
+            SavedFileReferenceDB db = _savedFileRepository.GetById(id);
             FileStream fileStream = _savedFileRepository.GetFileStream(db);
             return FileUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
         }
 
         public async Task<ReturnFileDTO> GetFileByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            SavedFileDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
+            SavedFileReferenceDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
             FileStream fileStream = await _savedFileRepository.GetFileStreamAsync(db, cancellationToken: cancellationToken);
             return FileUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
         }
 
         public FileStream GetFileStreamById(Guid id)
         {
-            SavedFileDB db = _savedFileRepository.GetById(id);
+            SavedFileReferenceDB db = _savedFileRepository.GetById(id);
             return _savedFileRepository.GetFileStream(db);
         }
 
         public async Task<FileStream> GetFileStreamByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            SavedFileDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
+            SavedFileReferenceDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
             return await _savedFileRepository.GetFileStreamAsync(db, cancellationToken: cancellationToken);
         }
     }

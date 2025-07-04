@@ -12,8 +12,12 @@ namespace M_SAVA_BLL.Models
         public Guid? Id { get; set; }
         public required string FileName { get; set; }
         public required string FileExtension { get; set; }
-        public IFormFile? FormFile { get; set; } = null!;
-        public byte[]? Bytes { get; set; } = null!;
-        public Stream? Stream { get; set; } = null!;
+        public required Stream Stream { get; set; } = null!;
+        public List<string>? Tags { get; set; } = null!;
+        public List<string>? Categories { get; set; } = null!;
+        public Guid? AccessGroup { get; set; } = null!;
+        public string? Description { get; set; } = null!;
+        public bool Restricted { get; set; } = false;
+        public bool PublicDownload { get; set; } = false;
     }
 }
