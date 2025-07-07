@@ -1,3 +1,4 @@
+using M_SAVA_BLL.Services;
 using M_SAVA_DAL.Contexts;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
@@ -16,11 +17,19 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<BaseDataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MainDatabaseConnection")));
 
+// Register services
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ReturnFileService>();
+builder.Services.AddScoped<SaveFileService>();
+builder.Services.AddScoped<LoginService>();
+
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<InviteCodeDB>, IdentifiableRepository<InviteCodeDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<AccessCodeDB>, IdentifiableRepository<AccessCodeDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<AccessGroupDB>, IdentifiableRepository<AccessGroupDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
-builder.Services.AddScoped<IIdentifiableRepository<InviteCodeDB>, IdentifiableRepository<InviteCodeDB>>();
 builder.Services.AddScoped<ISavedFileRepository, SavedFileRepository>();
 
 var app = builder.Build();
