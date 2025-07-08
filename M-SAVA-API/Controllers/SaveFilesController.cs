@@ -21,22 +21,62 @@ namespace M_SAVA_API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Guid>> CreateFile([FromForm] FileToSaveDTO dto, CancellationToken cancellationToken)
+        [Consumes("application/octet-stream")]
+        public async Task<ActionResult<Guid>> CreateFile(
+        [FromQuery] string fileName,
+        [FromQuery] string fileExtension,
+        [FromQuery] List<string>? tags,
+        [FromQuery] List<string>? categories,
+        [FromQuery] Guid? accessGroup,
+        [FromQuery] string? description,
+        [FromQuery] bool restricted = false,
+        [FromQuery] bool publicDownload = false,
+        CancellationToken cancellationToken = default)
         {
-            if (dto == null)
-                return BadRequest("File content is required.");
+            var dto = new FileToSaveDTO
+            {
+                FileName = fileName,
+                FileExtension = fileExtension,
+                Tags = tags,
+                Categories = categories,
+                AccessGroup = accessGroup,
+                Description = description,
+                Restricted = restricted,
+                PublicDownload = publicDownload,
+                Stream = Request.Body // raw stream
+            };
 
             Guid id = await _saveFileService.CreateFileAsync(dto, cancellationToken);
             return Ok(id);
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateFile(Guid id, [FromForm] FileToSaveDTO dto, CancellationToken cancellationToken)
+        [Consumes("application/octet-stream")]
+        public async Task<IActionResult> UpdateFile(Guid id,
+            [FromQuery] string fileName,
+            [FromQuery] string fileExtension,
+            [FromQuery] List<string>? tags,
+            [FromQuery] List<string>? categories,
+            [FromQuery] Guid? accessGroup,
+            [FromQuery] string? description,
+            [FromQuery] bool restricted = false,
+            [FromQuery] bool publicDownload = false,
+            CancellationToken cancellationToken = default)
         {
-            if (dto == null)
-                return BadRequest("File content is required.");
+            var dto = new FileToSaveDTO
+            {
+                Id = id,
+                FileName = fileName,
+                FileExtension = fileExtension,
+                Tags = tags,
+                Categories = categories,
+                AccessGroup = accessGroup,
+                Description = description,
+                Restricted = restricted,
+                PublicDownload = publicDownload,
+                Stream = Request.Body
+            };
 
-            dto.Id = id;
             await _saveFileService.UpdateFileAsync(dto, cancellationToken);
             return NoContent();
         }

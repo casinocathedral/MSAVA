@@ -12,7 +12,7 @@ namespace M_SAVA_BLL.Models
         public Guid? Id { get; set; }
         public required string FileName { get; set; }
         public required string FileExtension { get; set; }
-        public required Stream Stream { get; set; } = null!;
+        public Stream? Stream { get; set; } = null!;
         public List<string>? Tags { get; set; } = null!;
         public List<string>? Categories { get; set; } = null!;
         public Guid? AccessGroup { get; set; } = null!;

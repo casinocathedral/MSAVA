@@ -40,9 +40,11 @@ namespace M_SAVA_BLL.Utils
                 // Copy to temp file for validation
                 using (var tempFile = new FileStream(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.DeleteOnClose))
                 {
-                    contentStream.Position = 0;
+                    if (contentStream.CanSeek)
+                        contentStream.Position = 0;
                     contentStream.CopyTo(tempFile);
-                    tempFile.Position = 0;
+                    if (tempFile.CanSeek)
+                        tempFile.Position = 0;
                     return IsFileContentValid(tempFile, extension);
                 }
             }
@@ -139,7 +141,8 @@ namespace M_SAVA_BLL.Utils
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    dto.Position = 0;
+                    if (dto.CanSeek)
+                        dto.Position = 0;
                     dto.CopyTo(ms);
                     return ms.ToArray();
                 }
@@ -193,6 +196,43 @@ namespace M_SAVA_BLL.Utils
             return savedFileDb;
         }
 
+        public static async Task<SavedFileReferenceDB> MapFileDTOToDBAsync(FileToSaveDTO dto)
+        {
+            if (dto.Stream.CanSeek)
+            {
+                dto.Stream.Position = 0;
+            }
+            using MemoryStream ms = new MemoryStream();
+            await dto.Stream.CopyToAsync(ms);
+            ms.Position = 0;
+            
+            byte[] fileHash;
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                fileHash = sha256.ComputeHash(ms);
+            }
+
+            FileExtensionType extension = FileUtils.ParseFileExtension(dto.FileExtension);
+
+            AccessGroupDB accessGroup = null;
+            if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
+            {
+                accessGroup = new AccessGroupDB { Id = dto.AccessGroup.Value };
+            }
+
+            SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
+            {
+                Id = dto.Id ?? Guid.Empty,
+                FileHash = fileHash,
+                FileExtension = extension,
+                PublicDownload = dto.PublicDownload,
+                Restricted = dto.Restricted,
+                AccessGroup = accessGroup
+            };
+
+            return savedFileDb;
+        }
+
         // Maps SavedFileDB to ReturnFileDTO for returning to the client
         public static ReturnFileDTO MapDBToReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
         {
@@ -210,7 +250,8 @@ namespace M_SAVA_BLL.Utils
             else if (fileStream != null && fileStream.Length > 0)
             {
                 stream = fileStream;
-                stream.Position = 0;
+                if (stream.CanSeek)
+                    stream.Position = 0;
             }
             else
             {

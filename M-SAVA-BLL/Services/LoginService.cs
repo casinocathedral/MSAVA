@@ -28,12 +28,13 @@ namespace M_SAVA_BLL.Services
         private const int HashIterations = 100_000;
         private const int HashByteSize = 32;
 
-        public LoginService(IIdentifiableRepository<UserDB> userRepository, IIdentifiableRepository<JwtDB> jwtRepository, string jwtSecret, string jwtIssuer)
+        public LoginService(IIdentifiableRepository<UserDB> userRepository, IIdentifiableRepository<JwtDB> jwtRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _jwtRepository = jwtRepository ?? throw new ArgumentNullException(nameof(jwtRepository));
-            _jwtSecret = jwtSecret ?? throw new ArgumentNullException(nameof(jwtSecret));
-            _jwtIssuer = jwtIssuer ?? throw new ArgumentNullException(nameof(jwtIssuer));
+
+            _jwtSecret = "TemporarySuperSecretKey"; 
+            _jwtIssuer = "M-SAVA";
         }
 
         public async Task<LoginResponseDTO> LoginAsync(LoginRequestDTO request, CancellationToken cancellationToken = default)

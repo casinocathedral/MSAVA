@@ -83,7 +83,7 @@ namespace M_SAVA_BLL.Services
         // Create
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
-            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
             if (_savedFileRepository.FileExistsByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension))
             {
@@ -103,7 +103,7 @@ namespace M_SAVA_BLL.Services
         // Update
         public async Task UpdateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
-            SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
+            SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
             _savedFileRepository.Update(savedFileDb);
             await _savedFileRepository.CommitAsync();
@@ -124,12 +124,25 @@ namespace M_SAVA_BLL.Services
             string extension = dto.FileExtension;
             Stream contentStream = dto.Stream;
 
-            contentStream.Position = 0;
+            if (!contentStream.CanSeek)
+            {
+                MemoryStream ms = new MemoryStream();
+                await contentStream.CopyToAsync(ms, cancellationToken);
+                ms.Position = 0;
+                contentStream = ms;
+            }
+            else
+            {
+                contentStream.Position = 0;
+            }
+            
             bool isValid = FileUtils.ValidateFileContent(contentStream, extension);
             if (!isValid)
                 throw new ArgumentException("Service: File content does not match the provided extension.");
-            contentStream.Position = 0;
-
+            
+            if (contentStream.CanSeek)
+                contentStream.Position = 0;
+            
             await _savedFileRepository.SaveFileFromStreamAsync(savedFileDb, contentStream, overwrite, cancellationToken);
         }
     }
