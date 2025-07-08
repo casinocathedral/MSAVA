@@ -189,7 +189,7 @@ namespace M_SAVA_BLL.Utils
                 FileHash = fileHash,
                 FileExtension = extension,
                 PublicDownload = dto.PublicDownload,
-                Restricted = dto.Restricted,
+                PublicViewing = dto.PublicViewing,
                 AccessGroup = accessGroup
             };
 
@@ -226,7 +226,7 @@ namespace M_SAVA_BLL.Utils
                 FileHash = fileHash,
                 FileExtension = extension,
                 PublicDownload = dto.PublicDownload,
-                Restricted = dto.Restricted,
+                PublicViewing = dto.PublicViewing,
                 AccessGroup = accessGroup
             };
 
@@ -285,7 +285,7 @@ namespace M_SAVA_BLL.Utils
             SavedFileReferenceDB savedFileDb,
             UserDB owner,
             UserDB lastModifiedBy,
-            AccessGroupDB accessGroup,
+            AccessGroupDB accessGroup = null,
             bool publicViewing = false,
             bool publicDownload = false,
             bool restricted = false
@@ -304,7 +304,7 @@ namespace M_SAVA_BLL.Utils
 
             return new SavedFileDataDB
             {
-                Id = Guid.NewGuid(),
+                Id = dto.Id ?? Guid.NewGuid(),
                 FileReference = savedFileDb,
                 SizeInBytes = sizeInBytes,
                 SavedAt = DateTime.Now,
@@ -319,7 +319,7 @@ namespace M_SAVA_BLL.Utils
                 Categories = categories,
                 Owner = owner,
                 Metadata = metadata,
-                PublicViewing = publicViewing,
+                PublicViewing = dto.PublicViewing,
                 DownloadCount = 0,
             };
         }

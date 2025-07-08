@@ -17,55 +17,66 @@ namespace M_SAVA_BLL.Services
 {
     public class SaveFileService
     {
-        private readonly ISavedFileRepository _savedFileRepository;
+        private readonly ISavedFileRepository _savedRefsRepository;
+        private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;
 
-        public SaveFileService(ISavedFileRepository savedFileRepository)
+        public SaveFileService(ISavedFileRepository savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository)
         {
-            _savedFileRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
+            _savedRefsRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
+            _savedDataRepository = savedDataRepository ?? throw new ArgumentNullException(nameof(savedDataRepository), "Service: savedDataRepository cannot be null.");
         }
 
-        // Create
-        public Guid CreateFile(FileToSaveDTO dto)
+        public Guid CreateFile(FileToSaveDTO dto, UserDB sessionUser)
         {
             SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
-            if (_savedFileRepository.FileExistsByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension))
-            {
-                return _savedFileRepository.GetFileIdByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension);
-            }
+            var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
+                dto,
+                savedFileDb,
+                sessionUser,
+                sessionUser
+            );
+            _savedDataRepository.Insert(savedFileDataDb);
+            _savedDataRepository.Commit();
 
             SaveFileContent(savedFileDb, dto, false);
 
             savedFileDb.Id = Guid.NewGuid();
-
-            _savedFileRepository.Insert(savedFileDb);
-            _savedFileRepository.Commit();
+            _savedRefsRepository.Insert(savedFileDb);
+            _savedRefsRepository.Commit();
 
             return savedFileDb.Id;
         }
 
-        // Update
-        public void UpdateFile(FileToSaveDTO dto)
+        public void UpdateFile(FileToSaveDTO dto, UserDB sessionUser)
         {
             SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
+            var existingData = _savedDataRepository.GetById(dto.Id ?? Guid.Empty);
+            var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
+                dto,
+                savedFileDb,
+                existingData.Owner,
+                sessionUser
+            );
+            _savedDataRepository.Update(savedFileDataDb);
+            _savedDataRepository.Commit();
+
             SaveFileContent(savedFileDb, dto, true);
 
-            _savedFileRepository.Update(savedFileDb);
-            _savedFileRepository.Commit();
+            _savedRefsRepository.Update(savedFileDb);
+            _savedRefsRepository.Commit();
         }
 
-        // Delete
         public void DeleteFile(Guid id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Service: File id cannot be empty.", nameof(id));
 
-            _savedFileRepository.DeleteById(id);
-            _savedFileRepository.Commit();
+            _savedRefsRepository.DeleteById(id);
+            _savedRefsRepository.Commit();
         }
 
-        // Helper to save file content (sync)
         private void SaveFileContent(SavedFileReferenceDB savedFileDb, FileToSaveDTO dto, bool overwrite)
         {
             string extension = dto.FileExtension;
@@ -74,51 +85,58 @@ namespace M_SAVA_BLL.Services
                 throw new ArgumentException("Service: File content does not match the provided extension.");
 
             dto.Stream.Position = 0;
-            dto.Stream.Position = 0;
 
-            _savedFileRepository.SaveFileFromStream(savedFileDb, dto.Stream, overwrite);
+            _savedRefsRepository.SaveFileFromStream(savedFileDb, dto.Stream, overwrite);
         }
 
-        // Async CRUD methods
-        // Create
-        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
+        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, UserDB sessionUser, CancellationToken cancellationToken = default)
         {
             SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
-            if (_savedFileRepository.FileExistsByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension))
-            {
-                return _savedFileRepository.GetFileIdByHashAndExtension(savedFileDb.FileHash, savedFileDb.FileExtension);
-            }
+            var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
+                dto,
+                savedFileDb,
+                sessionUser,
+                sessionUser
+            );
+            _savedDataRepository.Insert(savedFileDataDb);
+            await _savedDataRepository.CommitAsync();
 
             savedFileDb.Id = Guid.NewGuid();
-
-            _savedFileRepository.Insert(savedFileDb);
-            await _savedFileRepository.CommitAsync();
+            _savedRefsRepository.Insert(savedFileDb);
+            await _savedRefsRepository.CommitAsync();
 
             await SaveFileContentAsync(savedFileDb, dto, false, cancellationToken);
 
             return savedFileDb.Id;
         }
 
-        // Update
-        public async Task UpdateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
+        public async Task UpdateFileAsync(FileToSaveDTO dto, UserDB sessionUser, CancellationToken cancellationToken = default)
         {
             SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
-            _savedFileRepository.Update(savedFileDb);
-            await _savedFileRepository.CommitAsync();
+            var existingData = await _savedDataRepository.GetByIdAsync(dto.Id ?? Guid.Empty, cancellationToken);
+            var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
+                dto,
+                savedFileDb,
+                existingData.Owner,
+                sessionUser
+            );
+            _savedDataRepository.Update(savedFileDataDb);
+            await _savedDataRepository.CommitAsync();
+
+            _savedRefsRepository.Update(savedFileDb);
+            await _savedRefsRepository.CommitAsync();
 
             await SaveFileContentAsync(savedFileDb, dto, true, cancellationToken);
         }
 
-        // Delete
         public async Task DeleteFileAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            await _savedFileRepository.DeleteByIdAsync(id);
-            await _savedFileRepository.CommitAsync();
+            await _savedRefsRepository.DeleteByIdAsync(id);
+            await _savedRefsRepository.CommitAsync();
         }
 
-        // Helper to save file content (async)
         private async Task SaveFileContentAsync(SavedFileReferenceDB savedFileDb, FileToSaveDTO dto, bool overwrite, CancellationToken cancellationToken = default)
         {
             string extension = dto.FileExtension;
@@ -143,7 +161,7 @@ namespace M_SAVA_BLL.Services
             if (contentStream.CanSeek)
                 contentStream.Position = 0;
             
-            await _savedFileRepository.SaveFileFromStreamAsync(savedFileDb, contentStream, overwrite, cancellationToken);
+            await _savedRefsRepository.SaveFileFromStreamAsync(savedFileDb, contentStream, overwrite, cancellationToken);
         }
     }
 }

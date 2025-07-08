@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using M_SAVA_BLL.Models;
 using M_SAVA_BLL.Services;
+using M_SAVA_DAL.Models;
 using System;
 using System.IO;
 using System.Threading;
@@ -14,6 +15,15 @@ namespace M_SAVA_API.Controllers
     public class SaveFilesController : ControllerBase
     {
         private readonly SaveFileService _saveFileService;
+
+        // Placeholder user to simulate session data until session reading is implemented
+        private readonly UserDB _sessionUser = new UserDB
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Username = "placeholder_user",
+            PasswordHash = Array.Empty<byte>(),
+            PasswordSalt = Array.Empty<byte>(),
+        };
 
         public SaveFilesController(SaveFileService saveFileService)
         {
@@ -29,7 +39,7 @@ namespace M_SAVA_API.Controllers
         [FromQuery] List<string>? categories,
         [FromQuery] Guid? accessGroup,
         [FromQuery] string? description,
-        [FromQuery] bool restricted = false,
+        [FromQuery] bool publicViewing = false,
         [FromQuery] bool publicDownload = false,
         CancellationToken cancellationToken = default)
         {
@@ -41,12 +51,12 @@ namespace M_SAVA_API.Controllers
                 Categories = categories,
                 AccessGroup = accessGroup,
                 Description = description,
-                Restricted = restricted,
+                PublicViewing = publicViewing,
                 PublicDownload = publicDownload,
-                Stream = Request.Body // raw stream
+                Stream = Request.Body
             };
 
-            Guid id = await _saveFileService.CreateFileAsync(dto, cancellationToken);
+            Guid id = await _saveFileService.CreateFileAsync(dto, _sessionUser, cancellationToken);
             return Ok(id);
         }
 
@@ -59,7 +69,7 @@ namespace M_SAVA_API.Controllers
             [FromQuery] List<string>? categories,
             [FromQuery] Guid? accessGroup,
             [FromQuery] string? description,
-            [FromQuery] bool restricted = false,
+            [FromQuery] bool publicViewing = false,
             [FromQuery] bool publicDownload = false,
             CancellationToken cancellationToken = default)
         {
@@ -72,12 +82,12 @@ namespace M_SAVA_API.Controllers
                 Categories = categories,
                 AccessGroup = accessGroup,
                 Description = description,
-                Restricted = restricted,
+                PublicViewing = publicViewing,
                 PublicDownload = publicDownload,
                 Stream = Request.Body
             };
 
-            await _saveFileService.UpdateFileAsync(dto, cancellationToken);
+            await _saveFileService.UpdateFileAsync(dto, _sessionUser, cancellationToken);
             return NoContent();
         }
 

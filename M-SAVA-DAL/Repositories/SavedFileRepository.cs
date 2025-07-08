@@ -65,7 +65,7 @@ namespace M_SAVA_DAL.Repositories
             if (fileHash == null || fileHash.Length == 0)
                 throw new ArgumentNullException(nameof(fileHash), "Repository: fileHash parameter cannot be null or empty.");
 
-            return _context.SavedFiles
+            return _context.FileRefs
                 .Any(f => f.FileExtension == extension && f.FileHash == fileHash);
         }
         public Guid GetFileIdByHashAndExtension(byte[] fileHash, FileExtensionType extension)
@@ -73,11 +73,15 @@ namespace M_SAVA_DAL.Repositories
             if (fileHash == null || fileHash.Length == 0)
                 throw new ArgumentNullException(nameof(fileHash), "Repository: fileHash parameter cannot be null or empty.");
 
-            SavedFileReferenceDB file = _context.SavedFiles
-                .FirstOrDefault(f => f.FileExtension == extension && f.FileHash == fileHash);
-
-            if (file == null)
-                throw new ArgumentNullException(nameof(file), "Repository: Saved file with FileHash, FileExtension pair not found.");
+            SavedFileReferenceDB file = null!;
+            try
+            {
+                file = _context.FileRefs
+                    .FirstOrDefault(f => f.FileExtension == extension && f.FileHash == fileHash);
+            } catch (Exception ex)
+            {
+                throw new Exception("Repository: Error retrieving file by hash and extension: " + ex.Message, ex);
+            }
 
             return file.Id;
         }
