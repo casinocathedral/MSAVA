@@ -18,8 +18,8 @@ namespace M_SAVA_DAL.Models
         public required string Description { get; set; }
         public required string MimeType { get; set; }
         public required string FileExtension { get; set; }
-        public required IQueryable<string> Tags { get; set; }
-        public required IQueryable<string> Categories { get; set; }
+        public required string[] Tags { get; set; }
+        public required string[] Categories { get; set; }
         public required JsonDocument Metadata { get; set; }
 
         public bool PublicViewing { get; set; } = false;

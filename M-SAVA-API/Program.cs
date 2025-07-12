@@ -57,6 +57,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ReturnFileService>();
 builder.Services.AddScoped<SaveFileService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<FileDataSearchService>();
 
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<InviteCodeDB>, IdentifiableRepository<InviteCodeDB>>();
@@ -65,6 +66,7 @@ builder.Services.AddScoped<IIdentifiableRepository<AccessGroupDB>, IdentifiableR
 builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
 builder.Services.AddScoped<ISavedFileRepository, SavedFileRepository>();
+builder.Services.AddScoped<IFileDataSearchRepository, FileDataSearchRepository>();
 
 // JWT Authentication setup
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

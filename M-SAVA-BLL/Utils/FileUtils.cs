@@ -297,8 +297,8 @@ namespace M_SAVA_BLL.Utils
 
             string mimeType = MetadataUtils.GetContentType(dto.FileExtension);
 
-            IQueryable<string> tags = (dto.Tags ?? new List<string>()).AsQueryable();
-            IQueryable<string> categories = (dto.Categories ?? new List<string>()).AsQueryable();
+            string[] tags = (dto.Tags ?? new List<string>()).ToArray();
+            string[] categories = (dto.Categories ?? new List<string>()).ToArray();
 
             JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream);
 
