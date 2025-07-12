@@ -2,7 +2,4 @@
 Marko's Static Asset Validation & Access
 
 # Contributors
-* @Markinatorina
-* @CasinoCathedral 
-* @DharNotDharma
-* @Kr1ck3t
+https://github.com/Markinatorina/MSAVA/graphs/contributors
