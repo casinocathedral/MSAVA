@@ -25,10 +25,10 @@ namespace M_SAVA_DAL.Models
         public bool PublicViewing { get; set; } = false;
         public uint DownloadCount { get; set; } = 0;
 
-        public DateTime SavedAt { get; set; } = DateTime.Now;
+        public DateTime SavedAt { get; set; } = DateTime.UtcNow;
         public required UserDB Owner { get; set; }
 
-        public DateTime LastModifiedAt { get; set; } = DateTime.Now;
+        public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
         public required UserDB LastModifiedBy { get; set; }
     }
 }
