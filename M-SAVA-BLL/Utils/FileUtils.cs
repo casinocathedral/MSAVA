@@ -300,7 +300,7 @@ namespace M_SAVA_BLL.Utils
             IQueryable<string> tags = (dto.Tags ?? new List<string>()).AsQueryable();
             IQueryable<string> categories = (dto.Categories ?? new List<string>()).AsQueryable();
 
-            JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream);
+            JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream, dto.FileExtension);
 
             return new SavedFileDataDB
             {
