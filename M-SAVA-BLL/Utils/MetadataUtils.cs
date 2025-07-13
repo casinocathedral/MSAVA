@@ -1,134 +1,192 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Drawing;
+using System.IO;
+using System.IO.Compression;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Xml;
 
 namespace M_SAVA_BLL.Utils
 {
     public static class MetadataUtils
     {
-        public static JsonDocument ExtractMetadataFromFileStream(Stream fileStream)
+        // Map each extension to its extractor and content type
+        private static readonly Dictionary<string, (Func<Stream, JsonDocument> Extractor, string ContentType)> ExtensionMap =
+            new(StringComparer.OrdinalIgnoreCase)
         {
-            //To be implemented: Extract metadata from the file stream
-            return JsonDocument.Parse("{}");
+            // Documents
+            { "txt", (ExtractTextFileMetadata, "text/plain") },
+            { "pdf", (ExtractDefaultMetadata, "application/pdf") }, // TODO
+            { "json", (ExtractDefaultMetadata, "application/json") }, // TODO
+            { "docx", (ExtractOfficeDocumentMetadata, "application/vnd.openxmlformats-officedocument.wordprocessingml.document") },
+            { "csv", (ExtractOfficeDocumentMetadata, "text/csv") },
+            { "xlsx", (ExtractOfficeDocumentMetadata, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
+            { "pptx", (ExtractOfficeDocumentMetadata, "application/vnd.openxmlformats-officedocument.presentationml.presentation") },
+            { "rtf", (ExtractDefaultMetadata, "application/rtf") }, // TODO
+            { "html", (ExtractDefaultMetadata, "text/html") }, // TODO
+            { "xml", (ExtractDefaultMetadata, "application/xml") }, // TODO
+            { "md", (ExtractTextFileMetadata, "text/markdown") },
+            { "odt", (ExtractDefaultMetadata, "application/vnd.oasis.opendocument.text") }, // TODO
+            { "ods", (ExtractDefaultMetadata, "application/vnd.oasis.opendocument.spreadsheet") }, // TODO
+            { "odp", (ExtractDefaultMetadata, "application/vnd.oasis.opendocument.presentation") }, // TODO
+            { "doc", (ExtractDefaultMetadata, "application/msword") }, // TODO
+            { "xls", (ExtractDefaultMetadata, "application/vnd.ms-excel") }, // TODO
+            { "ppt", (ExtractDefaultMetadata, "application/vnd.ms-powerpoint") }, // TODO
+            { "log", (ExtractTextFileMetadata, "text/plain") },
+            { "yaml", (ExtractDefaultMetadata, "application/x-yaml") }, // TODO
+            { "ini", (ExtractTextFileMetadata, "text/plain") },
+
+            // Raster images
+            { "webp", (ExtractDefaultMetadata, "image/webp") }, // TODO
+            { "png", (ExtractImageMetadata, "image/png") },
+            { "jpeg", (ExtractImageMetadata, "image/jpeg") },
+            { "jpg", (ExtractImageMetadata, "image/jpeg") },
+            { "tiff", (ExtractDefaultMetadata, "image/tiff") }, // TODO
+            { "bmp", (ExtractImageMetadata, "image/bmp") },
+            { "gif", (ExtractImageMetadata, "image/gif") },
+            { "ico", (ExtractDefaultMetadata, "image/x-icon") }, // TODO
+            { "heic", (ExtractDefaultMetadata, "image/heic") }, // TODO
+            { "heif", (ExtractDefaultMetadata, "image/heif") }, // TODO
+            { "psd", (ExtractDefaultMetadata, "image/vnd.adobe.photoshop") }, // TODO
+            { "exr", (ExtractDefaultMetadata, "image/aces") }, // TODO
+            { "tga", (ExtractDefaultMetadata, "image/x-targa") }, // TODO
+            { "jp2", (ExtractDefaultMetadata, "image/jp2") }, // TODO
+            { "pbm", (ExtractDefaultMetadata, "image/x-portable-bitmap") }, // TODO
+            { "pgm", (ExtractDefaultMetadata, "image/x-portable-graymap") }, // TODO
+            { "ppm", (ExtractDefaultMetadata, "image/x-portable-pixmap") }, // TODO
+            { "xbm", (ExtractDefaultMetadata, "image/x-xbitmap") }, // TODO
+            { "xpm", (ExtractDefaultMetadata, "image/x-xpixmap") }, // TODO
+            { "dib", (ExtractDefaultMetadata, "image/bmp") }, // TODO
+
+            // Vector images
+            { "svg", (ExtractDefaultMetadata, "image/svg+xml") }, // TODO
+            { "eps", (ExtractDefaultMetadata, "application/postscript") }, // TODO
+            { "ai", (ExtractDefaultMetadata, "application/postscript") }, // TODO
+            { "wmf", (ExtractDefaultMetadata, "image/wmf") }, // TODO
+            { "emf", (ExtractDefaultMetadata, "image/emf") }, // TODO
+            { "cdr", (ExtractDefaultMetadata, "application/cdr") }, // TODO
+            { "cgm", (ExtractDefaultMetadata, "image/cgm") }, // TODO
+            { "dxf", (ExtractDefaultMetadata, "image/vnd.dxf") }, // TODO
+            { "dwg", (ExtractDefaultMetadata, "image/vnd.dwg") }, // TODO
+            { "sketch", (ExtractDefaultMetadata, "application/octet-stream") }, // TODO
+            { "fig", (ExtractDefaultMetadata, "application/x-xfig") }, // TODO
+            { "drw", (ExtractDefaultMetadata, "application/octet-stream") }, // TODO
+            { "vsd", (ExtractDefaultMetadata, "application/vnd.visio") }, // TODO
+            { "fla", (ExtractDefaultMetadata, "application/octet-stream") }, // TODO
+            { "swf", (ExtractDefaultMetadata, "application/x-shockwave-flash") }, // TODO
+            { "sai", (ExtractDefaultMetadata, "application/octet-stream") }, // TODO
+            { "svgz", (ExtractDefaultMetadata, "image/svg+xml") }, // TODO
+            { "hpgl", (ExtractDefaultMetadata, "application/vnd.hp-hpgl") }, // TODO
+            { "plt", (ExtractDefaultMetadata, "application/plt") }, // TODO
+
+            // Audio
+            { "wav", (ExtractDefaultMetadata, "audio/wav") }, // TODO
+            { "flac", (ExtractDefaultMetadata, "audio/flac") }, // TODO
+            { "mp3", (ExtractDefaultMetadata, "audio/mpeg") }, // TODO
+            { "aac", (ExtractDefaultMetadata, "audio/aac") }, // TODO
+            { "ogg", (ExtractDefaultMetadata, "audio/ogg") }, // TODO
+            { "m4a", (ExtractDefaultMetadata, "audio/mp4") }, // TODO
+            { "wma", (ExtractDefaultMetadata, "audio/x-ms-wma") }, // TODO
+            { "aiff", (ExtractDefaultMetadata, "audio/aiff") }, // TODO
+            { "opus", (ExtractDefaultMetadata, "audio/opus") }, // TODO
+            { "amr", (ExtractDefaultMetadata, "audio/amr") }, // TODO
+            { "ape", (ExtractDefaultMetadata, "audio/ape") }, // TODO
+            { "mpc", (ExtractDefaultMetadata, "audio/mpc") }, // TODO
+            { "wv", (ExtractDefaultMetadata, "audio/wavpack") }, // TODO
+            { "tta", (ExtractDefaultMetadata, "audio/tta") }, // TODO
+            { "dsf", (ExtractDefaultMetadata, "audio/dsf") }, // TODO
+            { "ra", (ExtractDefaultMetadata, "audio/x-pn-realaudio") }, // TODO
+            { "gsm", (ExtractDefaultMetadata, "audio/gsm") }, // TODO
+            { "au", (ExtractDefaultMetadata, "audio/basic") }, // TODO
+            { "vox", (ExtractDefaultMetadata, "audio/voxware") }, // TODO
+
+            { "webm", (ExtractDefaultMetadata, "video/webm") }, // TODO
+            { "avi", (ExtractDefaultMetadata, "video/x-msvideo") }, // TODO
+            { "mp4", (ExtractDefaultMetadata, "video/mp4") }, // TODO
+            { "ogv", (ExtractDefaultMetadata, "video/ogg") }, // TODO
+            { "mkv", (ExtractDefaultMetadata, "video/x-matroska") }, // TODO
+            { "mov", (ExtractDefaultMetadata, "video/quicktime") }, // TODO
+            { "wmv", (ExtractDefaultMetadata, "video/x-ms-wmv") }, // TODO
+            { "flv", (ExtractDefaultMetadata, "video/x-flv") }, // TODO
+            { "m4v", (ExtractDefaultMetadata, "video/x-m4v") }, // TODO
+            { "mpg", (ExtractDefaultMetadata, "video/mpeg") }, // TODO
+            { "mpeg", (ExtractDefaultMetadata, "video/mpeg") }, // TODO
+            { "3gp", (ExtractDefaultMetadata, "video/3gpp") }, // TODO
+            { "3g2", (ExtractDefaultMetadata, "video/3gpp2") }, // TODO
+            { "asf", (ExtractDefaultMetadata, "video/x-ms-asf") }, // TODO
+            { "rm", (ExtractDefaultMetadata, "application/vnd.rn-realmedia") }, // TODO
+            { "vob", (ExtractDefaultMetadata, "video/dvd") }, // TODO
+            { "ts", (ExtractDefaultMetadata, "video/mp2t") }, // TODO
+            { "mts", (ExtractDefaultMetadata, "video/mp2t") }, // TODO
+            { "m2ts", (ExtractDefaultMetadata, "video/mp2t") }, // TODO
+            { "f4v", (ExtractDefaultMetadata, "video/x-f4v") }, // TODO
+        };
+
+        public static JsonDocument ExtractMetadataFromFileStream(Stream fileStream, string extension)
+        {
+            if (ExtensionMap.TryGetValue(extension.ToLowerInvariant(), out var entry))
+            {
+                return entry.Extractor(fileStream);
+            }
+            return ExtractDefaultMetadata(fileStream);
         }
 
         public static string GetContentType(string extension)
         {
-            return extension.ToLowerInvariant() switch
+            if (ExtensionMap.TryGetValue(extension.ToLowerInvariant(), out var entry))
             {
-                // Documents
-                "txt" => "text/plain",
-                "pdf" => "application/pdf",
-                "json" => "application/json",
-                "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "csv" => "text/csv",
-                "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                "rtf" => "application/rtf",
-                "html" => "text/html",
-                "xml" => "application/xml",
-                "md" => "text/markdown",
-                "odt" => "application/vnd.oasis.opendocument.text",
-                "ods" => "application/vnd.oasis.opendocument.spreadsheet",
-                "odp" => "application/vnd.oasis.opendocument.presentation",
-                "doc" => "application/msword",
-                "xls" => "application/vnd.ms-excel",
-                "ppt" => "application/vnd.ms-powerpoint",
-                "log" => "text/plain",
-                "yaml" => "application/x-yaml",
-                "ini" => "text/plain",
+                return entry.ContentType;
+            }
+            return "application/octet-stream";
+        }
 
-                // Raster images
-                "webp" => "image/webp",
-                "png" => "image/png",
-                "jpeg" => "image/jpeg",
-                "jpg" => "image/jpeg",
-                "tiff" => "image/tiff",
-                "bmp" => "image/bmp",
-                "gif" => "image/gif",
-                "ico" => "image/x-icon",
-                "heic" => "image/heic",
-                "heif" => "image/heif",
-                "psd" => "image/vnd.adobe.photoshop",
-                "exr" => "image/aces",
-                "tga" => "image/x-targa",
-                "jp2" => "image/jp2",
-                "pbm" => "image/x-portable-bitmap",
-                "pgm" => "image/x-portable-graymap",
-                "ppm" => "image/x-portable-pixmap",
-                "xbm" => "image/x-xbitmap",
-                "xpm" => "image/x-xpixmap",
-                "dib" => "image/bmp",
-
-                // Vector images
-                "svg" => "image/svg+xml",
-                "eps" => "application/postscript",
-                "ai" => "application/postscript",
-                "wmf" => "image/wmf",
-                "emf" => "image/emf",
-                "cdr" => "application/cdr",
-                "cgm" => "image/cgm",
-                "dxf" => "image/vnd.dxf",
-                "dwg" => "image/vnd.dwg",
-                "sketch" => "application/octet-stream",
-                "fig" => "application/x-xfig",
-                "drw" => "application/octet-stream",
-                "vsd" => "application/vnd.visio",
-                "fla" => "application/octet-stream",
-                "swf" => "application/x-shockwave-flash",
-                "sai" => "application/octet-stream",
-                "svgz" => "image/svg+xml",
-                "hpgl" => "application/vnd.hp-hpgl",
-                "plt" => "application/plt",
-
-                // Audio
-                "wav" => "audio/wav",
-                "flac" => "audio/flac",
-                "mp3" => "audio/mpeg",
-                "aac" => "audio/aac",
-                "ogg" => "audio/ogg",
-                "m4a" => "audio/mp4",
-                "wma" => "audio/x-ms-wma",
-                "aiff" => "audio/aiff",
-                "opus" => "audio/opus",
-                "amr" => "audio/amr",
-                "ape" => "audio/ape",
-                "mpc" => "audio/mpc",
-                "wv" => "audio/wavpack",
-                "tta" => "audio/tta",
-                "dsf" => "audio/dsf",
-                "ra" => "audio/x-pn-realaudio",
-                "gsm" => "audio/gsm",
-                "au" => "audio/basic",
-                "vox" => "audio/voxware",
-
-                // Video
-                "webm" => "video/webm",
-                "avi" => "video/x-msvideo",
-                "mp4" => "video/mp4",
-                "ogv" => "video/ogg",
-                "mkv" => "video/x-matroska",
-                "mov" => "video/quicktime",
-                "wmv" => "video/x-ms-wmv",
-                "flv" => "video/x-flv",
-                "m4v" => "video/x-m4v",
-                "mpg" => "video/mpeg",
-                "mpeg" => "video/mpeg",
-                "3gp" => "video/3gpp",
-                "3g2" => "video/3gpp2",
-                "asf" => "video/x-ms-asf",
-                "rm" => "application/vnd.rn-realmedia",
-                "vob" => "video/dvd",
-                "ts" => "video/mp2t",
-                "mts" => "video/mp2t",
-                "m2ts" => "video/mp2t",
-                "f4v" => "video/x-f4v",
-
-                _ => "application/octet-stream"
+        // Extractors
+        private static JsonDocument ExtractImageMetadata(Stream fileStream)
+        {
+            using var image = Image.FromStream(fileStream, useEmbeddedColorManagement: false, validateImageData: false);
+            var metadata = new
+            {
+                Type = "Image",
+                Format = image.RawFormat.ToString(),
+                Width = image.Width,
+                Height = image.Height,
+                HorizontalResolution = image.HorizontalResolution,
+                VerticalResolution = image.VerticalResolution,
+                PixelFormat = image.PixelFormat.ToString()
             };
+            return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
+        }
+
+        private static JsonDocument ExtractOfficeDocumentMetadata(Stream fileStream)
+        {
+            using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: true);
+            var entry = archive.GetEntry("docProps/core.xml");
+            if (entry != null)
+            {
+                using var xmlStream = entry.Open();
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlStream);
+                var title = xmlDoc.SelectSingleNode("//dc:title")?.InnerText;
+                var author = xmlDoc.SelectSingleNode("//dc:creator")?.InnerText;
+                var metadata = new { Type = "OfficeDocument", Title = title, Author = author };
+                return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
+            }
+            return JsonDocument.Parse("{}");
+        }
+
+        private static JsonDocument ExtractTextFileMetadata(Stream fileStream)
+        {
+            using var reader = new StreamReader(fileStream);
+            var content = reader.ReadToEnd();
+            var lineCount = content.Split('\n').Length;
+            var metadata = new { Type = "Text", LineCount = lineCount };
+            return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
+        }
+
+        private static JsonDocument ExtractDefaultMetadata(Stream fileStream)
+        {
+            var metadata = new { Type = "Unknown", Size = fileStream.Length };
+            return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
         }
     }
 }

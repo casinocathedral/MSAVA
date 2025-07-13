@@ -300,7 +300,7 @@ namespace M_SAVA_BLL.Utils
             string[] tags = (dto.Tags ?? new List<string>()).ToArray();
             string[] categories = (dto.Categories ?? new List<string>()).ToArray();
 
-            JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream);
+            JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream, dto.FileExtension);
 
             return new SavedFileDataDB
             {
