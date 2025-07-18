@@ -16,11 +16,11 @@ namespace M_SAVA_API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class SaveFilesController : ControllerBase
+    public class SaveFileController : ControllerBase
     {
         private readonly SaveFileService _saveFileService;
 
-        public SaveFilesController(SaveFileService saveFileService)
+        public SaveFileController(SaveFileService saveFileService)
         {
             _saveFileService = saveFileService ?? throw new ArgumentNullException(nameof(saveFileService));
         }

@@ -13,9 +13,8 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Utils
 {
-    public static class FileDTOUtils
+    public static class DataMappingUtils
     {
-        // Helper to parse file extension string to enum
         public static FileExtensionType ParseFileExtension(string extension)
         {
             if (string.IsNullOrWhiteSpace(extension))
@@ -30,8 +29,7 @@ namespace M_SAVA_BLL.Utils
             return FileExtensionType.Unknown;
         }
 
-        // Maps FileToSaveDTO to SavedFileReferenceDB for saving in the database
-        public static SavedFileReferenceDB MapFileDTOToDB(FileToSaveDTO dto)
+        public static SavedFileReferenceDB MapSavedFileReferenceDB(FileToSaveDTO dto)
         {
             byte[] fileHash;
             using (SHA256 sha256 = SHA256.Create())
@@ -39,7 +37,7 @@ namespace M_SAVA_BLL.Utils
                 fileHash = sha256.ComputeHash(dto.Stream);
             }
 
-            FileExtensionType extension = FileDTOUtils.ParseFileExtension(dto.FileExtension);
+            FileExtensionType extension = DataMappingUtils.ParseFileExtension(dto.FileExtension);
 
             AccessGroupDB? accessGroup = null;
             if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
@@ -60,7 +58,7 @@ namespace M_SAVA_BLL.Utils
             return savedFileDb;
         }
 
-        public static async Task<SavedFileReferenceDB> MapFileDTOToDBAsync(FileToSaveDTO dto)
+        public static async Task<SavedFileReferenceDB> MapSavedFileReferenceDBAsync(FileToSaveDTO dto)
         {
             if (dto.Stream.CanSeek)
             {
@@ -76,7 +74,7 @@ namespace M_SAVA_BLL.Utils
                 fileHash = sha256.ComputeHash(ms);
             }
 
-            FileExtensionType extension = FileDTOUtils.ParseFileExtension(dto.FileExtension);
+            FileExtensionType extension = DataMappingUtils.ParseFileExtension(dto.FileExtension);
 
             AccessGroupDB? accessGroup = null;
             if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
@@ -97,8 +95,7 @@ namespace M_SAVA_BLL.Utils
             return savedFileDb;
         }
 
-        // Maps SavedFileDB to ReturnFileDTO for returning to the client
-        public static ReturnFileDTO MapDBToReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
+        public static ReturnFileDTO MapReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
         {
             string fileName = GetFileName(db);
 
@@ -144,7 +141,7 @@ namespace M_SAVA_BLL.Utils
             return db.FileExtension.ToString().TrimStart('_').ToLowerInvariant();
         }
 
-        public static SavedFileDataDB MapDtoToMetadataDB(
+        public static SavedFileDataDB MapSavedFileDataDB(
             FileToSaveDTO dto,
             SavedFileReferenceDB savedFileDb,
             UserDB owner,
@@ -185,6 +182,30 @@ namespace M_SAVA_BLL.Utils
                 Metadata = metadata,
                 PublicViewing = dto.PublicViewing,
                 DownloadCount = 0,
+            };
+        }
+
+        public static SearchFileDataDTO MapSearchFileDataDTO(SavedFileDataDB db)
+        {
+            return new SearchFileDataDTO
+            {
+                DataId = db.Id,
+                RefId = db.FileReference?.Id ?? Guid.Empty,
+                Name = db.Name,
+                Description = db.Description,
+                MimeType = db.MimeType,
+                FileExtension = db.FileExtension,
+                Tags = db.Tags,
+                Categories = db.Categories,
+                SizeInBytes = db.SizeInBytes,
+                Checksum = db.Checksum,
+                Metadata = db.Metadata,
+                PublicViewing = db.PublicViewing,
+                DownloadCount = db.DownloadCount,
+                SavedAt = db.SavedAt,
+                LastModifiedAt = db.LastModifiedAt,
+                OwnerId = db.Owner?.Id ?? Guid.Empty,
+                LastModifiedById = db.LastModifiedBy?.Id ?? Guid.Empty
             };
         }
     }

@@ -35,9 +35,9 @@ namespace M_SAVA_BLL.Services
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
         {
             var sessionUser = await _userService.GetUserByIdAsync(sessionUserId, cancellationToken);
-            SavedFileReferenceDB savedFileDb = await FileDTOUtils.MapFileDTOToDBAsync(dto);
+            SavedFileReferenceDB savedFileDb = await DataMappingUtils.MapFileDTOToDBAsync(dto);
 
-            var savedFileDataDb = FileDTOUtils.MapDtoToMetadataDB(
+            var savedFileDataDb = DataMappingUtils.MapDtoToMetadataDB(
                 dto,
                 savedFileDb,
                 sessionUser,
@@ -58,10 +58,10 @@ namespace M_SAVA_BLL.Services
         public async Task UpdateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
         {
             var sessionUser = await _userService.GetUserByIdAsync(sessionUserId, cancellationToken);
-            SavedFileReferenceDB savedFileDb = await FileDTOUtils.MapFileDTOToDBAsync(dto);
+            SavedFileReferenceDB savedFileDb = await DataMappingUtils.MapFileDTOToDBAsync(dto);
 
             var existingData = await _savedDataRepository.GetByIdAsync(dto.Id ?? Guid.Empty, cancellationToken);
-            var savedFileDataDb = FileDTOUtils.MapDtoToMetadataDB(
+            var savedFileDataDb = DataMappingUtils.MapDtoToMetadataDB(
                 dto,
                 savedFileDb,
                 existingData.Owner,

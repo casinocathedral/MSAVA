@@ -1,0 +1,98 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using M_SAVA_BLL.Services;
+using M_SAVA_DAL.Models;
+using M_SAVA_BLL.Models;
+
+namespace M_SAVA_API.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class SearchFilesController : ControllerBase
+    {
+        private readonly SearchFileService _searchFileService;
+
+        public SearchFilesController(SearchFileService searchFileService)
+        {
+            _searchFileService = searchFileService ?? throw new ArgumentNullException(nameof(searchFileService));
+        }
+
+        [HttpGet("byAll/id")]
+        public ActionResult<List<Guid>> SearchFileGuidsByAllFields([FromQuery] string? tag, [FromQuery] string? category, [FromQuery] string? name, [FromQuery] string? description)
+        {
+            return Ok(_searchFileService.GetFileGuidsByAllFields(tag, category, name, description));
+        }
+
+        [HttpGet("byTag/id")]
+        public ActionResult<List<Guid>> SearchFileGuidsByTag([FromQuery] string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag))
+                return BadRequest("Tag must be provided.");
+            return Ok(_searchFileService.GetFileGuidsByTag(tag));
+        }
+
+        [HttpGet("byCategory/id")]
+        public ActionResult<List<Guid>> SearchFileGuidsByCategory([FromQuery] string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+                return BadRequest("Category must be provided.");
+            return Ok(_searchFileService.GetFileGuidsByCategory(category));
+        }
+
+        [HttpGet("byName/id")]
+        public ActionResult<List<Guid>> SearchFileGuidsByName([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Name must be provided.");
+            return Ok(_searchFileService.GetFileGuidsByName(name));
+        }
+
+        [HttpGet("byDescription/id")]
+        public ActionResult<List<Guid>> SearchFileGuidsByDescription([FromQuery] string description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return BadRequest("Description must be provided.");
+            return Ok(_searchFileService.GetFileGuidsByDescription(description));
+        }
+
+        [HttpGet("byAll/data")]
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByAllFields([FromQuery] string? tag, [FromQuery] string? category, [FromQuery] string? name, [FromQuery] string? description)
+        {
+            return Ok(_searchFileService.GetFileDataByAllFields(tag, category, name, description));
+        }
+
+        [HttpGet("byTag/data")]
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByTag([FromQuery] string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag))
+                return BadRequest("Tag must be provided.");
+            return Ok(_searchFileService.GetFileDataByTag(tag));
+        }
+
+        [HttpGet("byCategory/data")]
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByCategory([FromQuery] string category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+                return BadRequest("Category must be provided.");
+            return Ok(_searchFileService.GetFileDataByCategory(category));
+        }
+
+        [HttpGet("byName/data")]
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByName([FromQuery] string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Name must be provided.");
+            return Ok(_searchFileService.GetFileDataByName(name));
+        }
+
+        [HttpGet("byDescription/data")]
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByDescription([FromQuery] string description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return BadRequest("Description must be provided.");
+            return Ok(_searchFileService.GetFileDataByDescription(description));
+        }
+    }
+}

@@ -41,7 +41,6 @@ namespace M_SAVA_INF.Utils
             }
         }
 
-
         public static bool IsFileContentValid(FileStream fileStream, string extension)
         {
             if (string.IsNullOrWhiteSpace(extension))

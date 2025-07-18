@@ -69,7 +69,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ReturnFileService>();
 builder.Services.AddScoped<SaveFileService>();
 builder.Services.AddScoped<LoginService>();
-builder.Services.AddScoped<FileDataSearchService>();
+builder.Services.AddScoped<SearchFileService>();
 
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
