@@ -27,15 +27,5 @@ namespace M_SAVA_API.Controllers
 
             return result.FileStream;
         }
-
-        [HttpGet("async/{id:guid}")]
-        public async Task<IActionResult> GetFileByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            var result = await _returnFileService.GetFileByIdAsync(id, cancellationToken);
-            if (result == null)
-                return NotFound();
-
-            return result.FileStream;
-        }
     }
 }

@@ -10,21 +10,6 @@ namespace M_SAVA_BLL.Services
 {
     public class FileDataSearchService
     {
-        // Andrew - Your job will be to create a new service in the Business Layer, which is FileDataSearch 
-        // service, which will do very basic search functionalities for the tags, categories, description, 
-        // file name and properties. It will only need to call SavedFileDataDB from the database 
-        // (link (https://github.com/Markinatorina/MSAVA/blob/main/M-SAVA-DAL/Models/SavedFileDataDB.cs)). 
-        // This will also require creating a new controller whose purpose will only be access to this service.
-        // You can ask me because I have the most experience with search algorithms in this group.
-        /*Self note: make methods to search based on; tags categories, descriptions, file name, and properties, not to sure what 
-        properties are yet, but maybe starting with file name would make sense, 
-        step 1 - I need to access the data, in the database, so I need a dto for the data i need from SavedFileDataDB.
-        step 2 - SInce I am just searching what is already there, I suppose I only need the httpGet(tags), httpGet(description), etc. 
-        step 3 - In this file write the Linq and or algorithims to search for the specific data and return it, call these methods 
-                 in the controller.
-        atep 4 - 
-        */
-
         private readonly IFileDataSearchRepository _FileDataSearchRepository;
 
         public FileDataSearchService(IFileDataSearchRepository FileDataSearchRepository)

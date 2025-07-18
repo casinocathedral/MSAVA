@@ -10,6 +10,7 @@ using System.Text;
 using M_SAVA_INF.Environment;
 using Microsoft.AspNetCore.Authorization;
 using M_SAVA_API.Handlers;
+using M_SAVA_INF.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,21 +64,25 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<BaseDataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MainDatabaseConnection")));
 
-// Register services and repositories
+// Register services
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ReturnFileService>();
 builder.Services.AddScoped<SaveFileService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<FileDataSearchService>();
 
+// Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<InviteCodeDB>, IdentifiableRepository<InviteCodeDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<AccessCodeDB>, IdentifiableRepository<AccessCodeDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<AccessGroupDB>, IdentifiableRepository<AccessGroupDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
-builder.Services.AddScoped<ISavedFileRepository, SavedFileRepository>();
+builder.Services.AddScoped<IIdentifiableRepository<SavedFileReferenceDB>, IdentifiableRepository<SavedFileReferenceDB>>();
 builder.Services.AddScoped<IFileDataSearchRepository, FileDataSearchRepository>();
+
+// Register managers
+builder.Services.AddScoped<FileManager>();
 
 // JWT Authentication setup
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

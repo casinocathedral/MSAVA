@@ -94,30 +94,3 @@ namespace M_SAVA_DAL.Repositories
     }
 
 }
-    /*public class FileDataSearchRepository : IdentifiableRepository<SavedFileDataDB>, IFileDataSearchRepository
-    {
-        protected readonly DbSet<SavedFileDataDB> _entities
-        {
-            _entities = context.SavedFileData;
-        }
-
-        public FileDataSearchRepository(BaseDataContext context) : base(context)
-        {
-        }
-
-        public string[] GetAllTags(SavedFileDataDB Tags)
-        {
-            if (Tags == null) throw new ArgumentNullException(nameof(Tags), "Tags are empty");
-            var query = _entities.AsQueryable();
-            var results = query.Where(x =>
-                x.FileName.Contains(searchTerm) ||
-                x.Tags.Any(tag => tag.Name.Contains(searchTerm))
-            );
-        }
-
-        /* public string GetByTag(SavedFileDataDB Tags)
-         {
-             if (Tags == null) throw new ArgumentNullException(nameof(Tags), "Cannot be null");
-
-         } */
-

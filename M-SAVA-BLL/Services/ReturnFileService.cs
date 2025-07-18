@@ -10,42 +10,26 @@ using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using M_SAVA_INF.Managers;
 
 namespace M_SAVA_BLL.Services
 {
     public class ReturnFileService
     {
-        private readonly ISavedFileRepository _savedFileRepository;
+        private readonly IIdentifiableRepository<SavedFileReferenceDB> _savedFileRepository;
+        private readonly FileManager _fileManager;
 
-        public ReturnFileService(ISavedFileRepository savedFileRepository)
+        public ReturnFileService(IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository, FileManager fileManager)
         {
             _savedFileRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository));
+            _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
         }
 
         public ReturnFileDTO GetFileById(Guid id)
         {
             SavedFileReferenceDB db = _savedFileRepository.GetById(id);
-            FileStream fileStream = _savedFileRepository.GetFileStream(db);
-            return FileUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
-        }
-
-        public async Task<ReturnFileDTO> GetFileByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            SavedFileReferenceDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
-            FileStream fileStream = await _savedFileRepository.GetFileStreamAsync(db, cancellationToken: cancellationToken);
-            return FileUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
-        }
-
-        public FileStream GetFileStreamById(Guid id)
-        {
-            SavedFileReferenceDB db = _savedFileRepository.GetById(id);
-            return _savedFileRepository.GetFileStream(db);
-        }
-
-        public async Task<FileStream> GetFileStreamByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            SavedFileReferenceDB db = await _savedFileRepository.GetByIdAsync(id, cancellationToken);
-            return await _savedFileRepository.GetFileStreamAsync(db, cancellationToken: cancellationToken);
+            FileStream? fileStream = _fileManager.GetFileStream(db.FileHash, db.FileExtension.ToString());
+            return FileDTOUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
         }
     }
 }
