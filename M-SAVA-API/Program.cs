@@ -79,7 +79,6 @@ builder.Services.AddScoped<IIdentifiableRepository<AccessGroupDB>, IdentifiableR
 builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileReferenceDB>, IdentifiableRepository<SavedFileReferenceDB>>();
-builder.Services.AddScoped<IFileDataSearchRepository, FileDataSearchRepository>();
 
 // Register managers
 builder.Services.AddScoped<FileManager>();

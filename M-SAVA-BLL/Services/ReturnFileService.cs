@@ -29,7 +29,7 @@ namespace M_SAVA_BLL.Services
         {
             SavedFileReferenceDB db = _savedFileRepository.GetById(id);
             FileStream? fileStream = _fileManager.GetFileStream(db.FileHash, db.FileExtension.ToString());
-            return DataMappingUtils.MapDBToReturnFileDTO(db, fileStream: fileStream);
+            return DataMappingUtils.MapReturnFileDTO(db, fileStream: fileStream);
         }
     }
 }
