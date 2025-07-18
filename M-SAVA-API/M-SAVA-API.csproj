@@ -22,6 +22,11 @@
   <ItemGroup>
     <ProjectReference Include="..\M-SAVA-DAL\M-SAVA-DAL.csproj" />
 	<ProjectReference Include="..\M-SAVA-BLL\M-SAVA-BLL.csproj" />
+    <ProjectReference Include="..\M-SAVA-INF\M-SAVA-INF.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Attributes\" />
   </ItemGroup>
 
 </Project>

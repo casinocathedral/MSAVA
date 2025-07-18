@@ -19,15 +19,18 @@ namespace M_SAVA_BLL.Services
     {
         private readonly ISavedFileRepository _savedRefsRepository;
         private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;
+        private readonly UserService _userService;
 
-        public SaveFileService(ISavedFileRepository savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository)
+        public SaveFileService(ISavedFileRepository savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository, UserService userService)
         {
             _savedRefsRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
             _savedDataRepository = savedDataRepository ?? throw new ArgumentNullException(nameof(savedDataRepository), "Service: savedDataRepository cannot be null.");
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService), "Service: userService cannot be null.");
         }
 
-        public Guid CreateFile(FileToSaveDTO dto, UserDB sessionUser)
+        public Guid CreateFile(FileToSaveDTO dto, Guid sessionUserId)
         {
+            var sessionUser = _userService.GetUserById(sessionUserId);
             SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
@@ -48,8 +51,9 @@ namespace M_SAVA_BLL.Services
             return savedFileDb.Id;
         }
 
-        public void UpdateFile(FileToSaveDTO dto, UserDB sessionUser)
+        public void UpdateFile(FileToSaveDTO dto, Guid sessionUserId)
         {
+            var sessionUser = _userService.GetUserById(sessionUserId);
             SavedFileReferenceDB savedFileDb = FileUtils.MapFileDTOToDB(dto);
 
             var existingData = _savedDataRepository.GetById(dto.Id ?? Guid.Empty);
@@ -89,8 +93,9 @@ namespace M_SAVA_BLL.Services
             _savedRefsRepository.SaveFileFromStream(savedFileDb, dto.Stream, overwrite);
         }
 
-        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, UserDB sessionUser, CancellationToken cancellationToken = default)
+        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
         {
+            var sessionUser = await _userService.GetUserByIdAsync(sessionUserId, cancellationToken);
             SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
             var savedFileDataDb = FileUtils.MapDtoToMetadataDB(
@@ -111,8 +116,9 @@ namespace M_SAVA_BLL.Services
             return savedFileDb.Id;
         }
 
-        public async Task UpdateFileAsync(FileToSaveDTO dto, UserDB sessionUser, CancellationToken cancellationToken = default)
+        public async Task UpdateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
         {
+            var sessionUser = await _userService.GetUserByIdAsync(sessionUserId, cancellationToken);
             SavedFileReferenceDB savedFileDb = await FileUtils.MapFileDTOToDBAsync(dto);
 
             var existingData = await _savedDataRepository.GetByIdAsync(dto.Id ?? Guid.Empty, cancellationToken);

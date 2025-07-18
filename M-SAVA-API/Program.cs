@@ -7,11 +7,23 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using M_SAVA_INF.Environment;
+using Microsoft.AspNetCore.Authorization;
+using M_SAVA_API.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+builder.Services.AddSingleton<IAuthorizationHandler, NotBannedHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .AddRequirements(new NotBannedRequirement())
+        .Build();
+});
 
 // Swagger setup WITH JWT SUPPORT
 builder.Services.AddEndpointsApiExplorer();
@@ -44,8 +56,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // (Optional) Support for file uploads or other filters
-    // c.OperationFilter<OctetStreamOperationFilter>();
+    c.OperationFilter<OctetStreamOperationFilter>();
 });
 
 // Register main database context
@@ -74,12 +85,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
             ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero, 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "TemporarySuperSecretKey_ChangeMe_NOW_1234"))
+            IssuerSigningKey = new SymmetricSecurityKey(M_SAVA_INF.Environment.Environment.Instance.GetSigningKeyBytes())
         };
     });
 
@@ -94,7 +107,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // <<== THIS IS NEEDED!
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
