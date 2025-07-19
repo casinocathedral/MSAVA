@@ -13,9 +13,9 @@ namespace M_SAVA_API.Controllers
     [Authorize]
     public class FilesRetrieveController : ControllerBase
     {
-        private readonly ReturnFileService _returnFileService;
+        private readonly IReturnFileService _returnFileService;
 
-        public FilesRetrieveController(ReturnFileService returnFileService)
+        public FilesRetrieveController(IReturnFileService returnFileService)
         {
             _returnFileService = returnFileService ?? throw new ArgumentNullException(nameof(returnFileService));
         }
@@ -23,11 +23,7 @@ namespace M_SAVA_API.Controllers
         [HttpGet("{id:guid}")]
         public IActionResult GetFileById(Guid refId)
         {
-            var result = _returnFileService.GetFileById(refId);
-            if (result == null)
-                return NotFound();
-
-            return result.FileStream;
+            return _returnFileService.GetFileById(refId).FileStream;
         }
     }
 }

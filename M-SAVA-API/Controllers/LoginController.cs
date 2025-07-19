@@ -10,9 +10,9 @@ namespace M_SAVA_API.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
 
-        public LoginController(LoginService loginService)
+        public LoginController(ILoginService loginService)
         {
             _loginService = loginService;
         }
@@ -21,12 +21,7 @@ namespace M_SAVA_API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest("Username and password are required.");
-
             var result = await _loginService.LoginAsync(request);
-            if (string.IsNullOrEmpty(result?.Token))
-                return BadRequest("Incorrect username or password.");
             return Ok(result);
         }
 
@@ -34,12 +29,7 @@ namespace M_SAVA_API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password) || request.InviteCode == Guid.Empty)
-                return BadRequest("Username, password, and a valid invite code are required.");
-
             var success = await _loginService.RegisterAsync(request);
-            if (!success)
-                return BadRequest("Username already exists or invalid invite code.");
             return Ok("User registered!");
         }
     }

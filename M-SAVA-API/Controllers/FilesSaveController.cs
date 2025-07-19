@@ -18,9 +18,9 @@ namespace M_SAVA_API.Controllers
     [Authorize]
     public class FilesSaveController : ControllerBase
     {
-        private readonly SaveFileService _saveFileService;
+        private readonly ISaveFileService _saveFileService;
 
-        public FilesSaveController(SaveFileService saveFileService)
+        public FilesSaveController(ISaveFileService saveFileService)
         {
             _saveFileService = saveFileService ?? throw new ArgumentNullException(nameof(saveFileService));
         }
