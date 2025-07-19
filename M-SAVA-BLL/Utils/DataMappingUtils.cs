@@ -1,5 +1,6 @@
 ﻿using M_SAVA_BLL.Models;
 using M_SAVA_DAL.Models;
+using M_SAVA_DAL.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -39,12 +40,6 @@ namespace M_SAVA_BLL.Utils
 
             FileExtensionType extension = DataMappingUtils.ParseFileExtension(dto.FileExtension);
 
-            AccessGroupDB? accessGroup = null;
-            if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
-            {
-                accessGroup = new AccessGroupDB { Id = dto.AccessGroup.Value };
-            }
-
             SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
             {
                 Id = dto.Id ?? Guid.Empty,
@@ -52,44 +47,7 @@ namespace M_SAVA_BLL.Utils
                 FileExtension = extension,
                 PublicDownload = dto.PublicDownload,
                 PublicViewing = dto.PublicViewing,
-                AccessGroup = accessGroup
-            };
-
-            return savedFileDb;
-        }
-
-        public static async Task<SavedFileReferenceDB> MapSavedFileReferenceDBAsync(FileToSaveDTO dto)
-        {
-            if (dto.Stream.CanSeek)
-            {
-                dto.Stream.Position = 0;
-            }
-            using MemoryStream ms = new MemoryStream();
-            await dto.Stream.CopyToAsync(ms);
-            ms.Position = 0;
-            
-            byte[] fileHash;
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                fileHash = sha256.ComputeHash(ms);
-            }
-
-            FileExtensionType extension = DataMappingUtils.ParseFileExtension(dto.FileExtension);
-
-            AccessGroupDB? accessGroup = null;
-            if (dto.AccessGroup.HasValue && dto.AccessGroup.Value != Guid.Empty)
-            {
-                accessGroup = new AccessGroupDB { Id = dto.AccessGroup.Value };
-            }
-
-            SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
-            {
-                Id = dto.Id ?? Guid.Empty,
-                FileHash = fileHash,
-                FileExtension = extension,
-                PublicDownload = dto.PublicDownload,
-                PublicViewing = dto.PublicViewing,
-                AccessGroup = accessGroup
+                AccessGroupId = dto.AccessGroupId
             };
 
             return savedFileDb;
@@ -99,7 +57,7 @@ namespace M_SAVA_BLL.Utils
         {
             string fileName = GetFileName(db);
 
-            string fileExtension = GetFileExtension(db);
+            string fileExtension = FileExtensionUtils.GetFileExtension(db);
 
             string contentType = MetadataUtils.GetContentType(fileExtension);
 
@@ -136,16 +94,11 @@ namespace M_SAVA_BLL.Utils
             return BitConverter.ToString(db.FileHash).Replace("-", "").ToLowerInvariant();
         }
 
-        public static string GetFileExtension(SavedFileReferenceDB db)
-        {
-            return db.FileExtension.ToString().TrimStart('_').ToLowerInvariant();
-        }
-
         public static SavedFileDataDB MapSavedFileDataDB(
             FileToSaveDTO dto,
             SavedFileReferenceDB savedFileDb,
-            UserDB owner,
-            UserDB lastModifiedBy,
+            Guid owner,
+            Guid lastModifiedBy,
             AccessGroupDB? accessGroup = null,
             bool publicViewing = false,
             bool publicDownload = false,
@@ -166,11 +119,11 @@ namespace M_SAVA_BLL.Utils
             return new SavedFileDataDB
             {
                 Id = dto.Id ?? Guid.NewGuid(),
-                FileReference = savedFileDb,
+                FileReferenceId = savedFileDb.Id,
                 SizeInBytes = sizeInBytes,
                 SavedAt = DateTime.UtcNow,
                 LastModifiedAt = DateTime.UtcNow,
-                LastModifiedBy = lastModifiedBy,
+                LastModifiedById = lastModifiedBy,
                 Checksum = checksum,
                 Name = dto.FileName,
                 Description = dto.Description ?? string.Empty,
@@ -178,7 +131,7 @@ namespace M_SAVA_BLL.Utils
                 FileExtension = dto.FileExtension,
                 Tags = tags,
                 Categories = categories,
-                Owner = owner,
+                OwnerId = owner,
                 Metadata = metadata,
                 PublicViewing = dto.PublicViewing,
                 DownloadCount = 0,

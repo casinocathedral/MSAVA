@@ -1,27 +1,29 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using M_SAVA_BLL.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using M_SAVA_BLL.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace M_SAVA_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/files/retrieve")]
     [ApiController]
-    public class RetrieveFileController : ControllerBase
+    [Authorize]
+    public class FilesRetrieveController : ControllerBase
     {
         private readonly ReturnFileService _returnFileService;
 
-        public RetrieveFileController(ReturnFileService returnFileService)
+        public FilesRetrieveController(ReturnFileService returnFileService)
         {
             _returnFileService = returnFileService ?? throw new ArgumentNullException(nameof(returnFileService));
         }
 
         [HttpGet("{id:guid}")]
-        public IActionResult GetFileById(Guid id)
+        public IActionResult GetFileById(Guid refId)
         {
-            var result = _returnFileService.GetFileById(id);
+            var result = _returnFileService.GetFileById(refId);
             if (result == null)
                 return NotFound();
 

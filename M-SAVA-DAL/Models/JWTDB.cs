@@ -9,7 +9,8 @@ namespace M_SAVA_DAL.Models
     public class JwtDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public required Guid UserId { get; set; }
+        public UserDB? User { get; set; }
         public string Username { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
         public bool IsBanned { get; set; }

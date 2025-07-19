@@ -17,13 +17,13 @@ namespace M_SAVA_DAL.Repositories
 
         }
 
-        public T? GetById(Guid id)
+        public T GetById(Guid id)
         {
             return _entities.AsNoTracking().SingleOrDefault(s => s.Id == id)
                 ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");
         }
 
-        public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<T> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _entities.AsNoTracking().SingleOrDefaultAsync(s => s.Id == id, cancellationToken)
                 ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");

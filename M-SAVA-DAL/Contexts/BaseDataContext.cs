@@ -18,12 +18,21 @@ namespace M_SAVA_DAL.Contexts
         {
             //todo
         }
-        public DbSet<UserDB> Users { get; set; }
-        public DbSet<SavedFileReferenceDB> FileRefs { get; set; }
-        public DbSet<JwtDB> Jwts { get; set; }
-        public DbSet<SavedFileDataDB> FileData { get; set; }
+
+        // User entities
         public DbSet<InviteCodeDB> InviteCodes { get; set; }
+        public DbSet<UserDB> Users { get; set; }
+        public DbSet<JwtDB> Jwts { get; set; }
+
+        // File entities
+        public DbSet<SavedFileReferenceDB> FileRefs { get; set; }
+        public DbSet<SavedFileDataDB> FileData { get; set; }
+
+        // Access group entities
         public DbSet<AccessCodeDB> AccessCodes { get; set; }
         public DbSet<AccessGroupDB> AccessGroups { get; set; }
+
+        // Error log entities
+        public DbSet<ErrorLogDB> ErrorLogs { get; set; }
     }
 }

@@ -11,7 +11,8 @@ namespace M_SAVA_DAL.Models
     public class SavedFileDataDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
-        public required SavedFileReferenceDB FileReference { get; set; }
+        public SavedFileReferenceDB? FileReference { get; set; }
+        public required Guid FileReferenceId { get; set; }
         public required ulong SizeInBytes { get; set; }
         public required string Checksum { get; set; }
         public required string Name { get; set; }
@@ -26,9 +27,11 @@ namespace M_SAVA_DAL.Models
         public uint DownloadCount { get; set; } = 0;
 
         public DateTime SavedAt { get; set; } = DateTime.UtcNow;
-        public required UserDB Owner { get; set; }
+        public required Guid OwnerId { get; set; }
+        public UserDB? Owner { get; set; }
 
         public DateTime LastModifiedAt { get; set; } = DateTime.UtcNow;
-        public required UserDB LastModifiedBy { get; set; }
+        public required Guid LastModifiedById { get; set; }
+        public UserDB? LastModifiedBy { get; set; }
     }
 }

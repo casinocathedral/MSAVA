@@ -13,14 +13,14 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/files/save")]
     [ApiController]
     [Authorize]
-    public class SaveFileController : ControllerBase
+    public class FilesSaveController : ControllerBase
     {
         private readonly SaveFileService _saveFileService;
 
-        public SaveFileController(SaveFileService saveFileService)
+        public FilesSaveController(SaveFileService saveFileService)
         {
             _saveFileService = saveFileService ?? throw new ArgumentNullException(nameof(saveFileService));
         }
@@ -44,7 +44,7 @@ namespace M_SAVA_API.Controllers
                 FileExtension = fileExtension,
                 Tags = tags,
                 Categories = categories,
-                AccessGroup = accessGroup,
+                AccessGroupId = accessGroup,
                 Description = description,
                 PublicViewing = publicViewing,
                 PublicDownload = publicDownload,
@@ -76,7 +76,7 @@ namespace M_SAVA_API.Controllers
                 FileExtension = fileExtension,
                 Tags = tags,
                 Categories = categories,
-                AccessGroup = accessGroup,
+                AccessGroupId = accessGroup,
                 Description = description,
                 PublicViewing = publicViewing,
                 PublicDownload = publicDownload,

@@ -15,7 +15,7 @@ namespace M_SAVA_BLL.Models
         public required Stream Stream { get; set; } = null!;
         public List<string>? Tags { get; set; } = null!;
         public List<string>? Categories { get; set; } = null!;
-        public Guid? AccessGroup { get; set; } = null!;
+        public Guid? AccessGroupId { get; set; } = null!;
         public string? Description { get; set; } = null!;
         public bool PublicViewing { get; set; } = false;
         public bool PublicDownload { get; set; } = false;
