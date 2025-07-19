@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -13,26 +12,6 @@ namespace M_SAVA_DAL.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Jwts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Username = table.Column<string>(type: "text", nullable: false),
-                    IsAdmin = table.Column<bool>(type: "boolean", nullable: false),
-                    IsBanned = table.Column<bool>(type: "boolean", nullable: false),
-                    IsWhitelisted = table.Column<bool>(type: "boolean", nullable: false),
-                    InviteCode = table.Column<Guid>(type: "uuid", nullable: false),
-                    TokenString = table.Column<string>(type: "text", nullable: false),
-                    IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Jwts", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "AccessCodes",
                 columns: table => new
@@ -80,8 +59,8 @@ namespace M_SAVA_DAL.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileHash = table.Column<byte[]>(type: "bytea", nullable: false),
-                    FileExtension = table.Column<int>(type: "integer", nullable: false),
+                    FileHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    FileExtension = table.Column<byte>(type: "smallint", nullable: false),
                     PublicDownload = table.Column<bool>(type: "boolean", nullable: false),
                     PublicViewing = table.Column<bool>(type: "boolean", nullable: false),
                     AccessGroupId = table.Column<Guid>(type: "uuid", nullable: true)
@@ -122,6 +101,26 @@ namespace M_SAVA_DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ErrorLogs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: false),
+                    StackTrace = table.Column<string>(type: "text", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ErrorLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ErrorLogs_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FileData",
                 columns: table => new
                 {
@@ -133,8 +132,8 @@ namespace M_SAVA_DAL.Migrations
                     Description = table.Column<string>(type: "text", nullable: false),
                     MimeType = table.Column<string>(type: "text", nullable: false),
                     FileExtension = table.Column<string>(type: "text", nullable: false),
-                    Tags = table.Column<IQueryable<string>>(type: "text[]", nullable: false),
-                    Categories = table.Column<IQueryable<string>>(type: "text[]", nullable: false),
+                    Tags = table.Column<string[]>(type: "text[]", nullable: false),
+                    Categories = table.Column<string[]>(type: "text[]", nullable: false),
                     Metadata = table.Column<JsonDocument>(type: "jsonb", nullable: false),
                     PublicViewing = table.Column<bool>(type: "boolean", nullable: false),
                     DownloadCount = table.Column<long>(type: "bigint", nullable: false),
@@ -187,6 +186,32 @@ namespace M_SAVA_DAL.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Jwts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: false),
+                    IsAdmin = table.Column<bool>(type: "boolean", nullable: false),
+                    IsBanned = table.Column<bool>(type: "boolean", nullable: false),
+                    IsWhitelisted = table.Column<bool>(type: "boolean", nullable: false),
+                    InviteCode = table.Column<Guid>(type: "uuid", nullable: false),
+                    TokenString = table.Column<string>(type: "text", nullable: false),
+                    IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Jwts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Jwts_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AccessCodes_OwnerId",
                 table: "AccessCodes",
@@ -206,6 +231,11 @@ namespace M_SAVA_DAL.Migrations
                 name: "IX_AccessGroups_OwnerId",
                 table: "AccessGroups",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ErrorLogs_UserId",
+                table: "ErrorLogs",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FileData_FileReferenceId",
@@ -231,6 +261,11 @@ namespace M_SAVA_DAL.Migrations
                 name: "IX_InviteCodes_OwnerId",
                 table: "InviteCodes",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jwts_UserId",
+                table: "Jwts",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_AccessGroupDBId",
@@ -264,6 +299,9 @@ namespace M_SAVA_DAL.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_AccessGroups_Users_OwnerId",
                 table: "AccessGroups");
+
+            migrationBuilder.DropTable(
+                name: "ErrorLogs");
 
             migrationBuilder.DropTable(
                 name: "FileData");

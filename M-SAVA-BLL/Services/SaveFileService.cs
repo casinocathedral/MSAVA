@@ -21,14 +21,12 @@ namespace M_SAVA_BLL.Services
     {
         private readonly IIdentifiableRepository<SavedFileReferenceDB> _savedRefsRepository;
         private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;
-        private readonly UserService _userService;
         private readonly FileManager _fileManager;
 
-        public SaveFileService(IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository, UserService userService, FileManager fileManager)
+        public SaveFileService(IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository, IUserService userService, FileManager fileManager)
         {
             _savedRefsRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
             _savedDataRepository = savedDataRepository ?? throw new ArgumentNullException(nameof(savedDataRepository), "Service: savedDataRepository cannot be null.");
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService), "Service: userService cannot be null.");
             _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager), "Service: fileManager cannot be null.");
         }
 

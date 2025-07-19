@@ -257,11 +257,12 @@ namespace M_SAVA_DAL.Migrations
                     b.Property<Guid?>("AccessGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("FileExtension")
-                        .HasColumnType("integer");
+                    b.Property<byte>("FileExtension")
+                        .HasColumnType("smallint");
 
                     b.Property<byte[]>("FileHash")
                         .IsRequired()
+                        .HasMaxLength(32)
                         .HasColumnType("bytea");
 
                     b.Property<bool>("PublicDownload")
