@@ -1,47 +1,39 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using M_SAVA_BLL.Models;
+﻿using M_SAVA_BLL.Models;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
-using System;
 using System.Net;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Security.Claims;
+using System.Text.Json;
 
-namespace M_SAVA_API.Handlers
+namespace M_SAVA_API.Middleware
 {
-    public class ExceptionHandler
+    public class ExceptionCatcherMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly IHostEnvironment _env;
-        private readonly ILogger<ExceptionHandler> _logger;
-        private readonly IIdentifiableRepository<ErrorLogDB> _errorLogRepository;
 
-        public ExceptionHandler(RequestDelegate next, IHostEnvironment env, ILogger<ExceptionHandler> logger, IIdentifiableRepository<ErrorLogDB> errorLogRepository)
+        public ExceptionCatcherMiddleware(RequestDelegate next)
         {
             _next = next;
-            _env = env;
-            _logger = logger;
-            _errorLogRepository = errorLogRepository;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
+            var env = context.RequestServices.GetRequiredService<IHostEnvironment>();
+            var logger = context.RequestServices.GetRequiredService<ILogger<ExceptionCatcherMiddleware>>();
+            var errorLogRepository = context.RequestServices.GetRequiredService<IIdentifiableRepository<ErrorLogDB>>();
             try
             {
                 await _next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception occurred");
-                LogError(context, ex);
-                await HandleExceptionAsync(context, ex, _env.IsDevelopment());
+                logger.LogError(ex, "Unhandled exception occurred");
+                LogError(context, ex, errorLogRepository);
+                await HandleExceptionAsync(context, ex, env.IsDevelopment());
             }
         }
 
-        private void LogError(HttpContext context, Exception exception)
+        private void LogError(HttpContext context, Exception exception, IIdentifiableRepository<ErrorLogDB> errorLogRepository)
         {
             Guid? userId = null;
             if (context.User?.Identity?.IsAuthenticated == true)
@@ -61,8 +53,8 @@ namespace M_SAVA_API.Handlers
                 Timestamp = DateTime.UtcNow,
                 UserId = userId
             };
-            _errorLogRepository.Insert(errorLog);
-            _errorLogRepository.Commit();
+            errorLogRepository.Insert(errorLog);
+            errorLogRepository.Commit();
         }
 
         private static async Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)

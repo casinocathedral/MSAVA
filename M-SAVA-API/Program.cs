@@ -11,6 +11,7 @@ using M_SAVA_INF.Environment;
 using Microsoft.AspNetCore.Authorization;
 using M_SAVA_API.Handlers;
 using M_SAVA_INF.Managers;
+using M_SAVA_API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,7 +115,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseMiddleware<ExceptionHandler>();
+app.UseMiddleware<ExceptionCatcherMiddleware>();
 
 app.UseAuthentication(); 
 app.UseAuthorization();
