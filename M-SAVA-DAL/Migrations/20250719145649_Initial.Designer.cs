@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace M_SAVA_DAL.Migrations
 {
     [DbContext(typeof(BaseDataContext))]
-    [Migration("20250719142946_Initial")]
+    [Migration("20250719145649_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -260,7 +260,7 @@ namespace M_SAVA_DAL.Migrations
                     b.Property<Guid?>("AccessGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte>("FileExtension")
+                    b.Property<short>("FileExtension")
                         .HasColumnType("smallint");
 
                     b.Property<byte[]>("FileHash")

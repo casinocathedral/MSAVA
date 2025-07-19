@@ -60,7 +60,7 @@ namespace M_SAVA_DAL.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FileHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
-                    FileExtension = table.Column<byte>(type: "smallint", nullable: false),
+                    FileExtension = table.Column<short>(type: "smallint", nullable: false),
                     PublicDownload = table.Column<bool>(type: "boolean", nullable: false),
                     PublicViewing = table.Column<bool>(type: "boolean", nullable: false),
                     AccessGroupId = table.Column<Guid>(type: "uuid", nullable: true)

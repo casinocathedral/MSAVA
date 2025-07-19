@@ -257,7 +257,7 @@ namespace M_SAVA_DAL.Migrations
                     b.Property<Guid?>("AccessGroupId")
                         .HasColumnType("uuid");
 
-                    b.Property<byte>("FileExtension")
+                    b.Property<short>("FileExtension")
                         .HasColumnType("smallint");
 
                     b.Property<byte[]>("FileHash")
