@@ -95,11 +95,17 @@ namespace M_SAVA_DAL.Repositories
 
         public void Attach(T entity)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity), "Repository: Parameter entity is null.");
+            if (_context.Entry(entity).State != EntityState.Detached && _context.Entry(entity).State != EntityState.Added)
+                throw new InvalidOperationException("Repository: Entity is already being tracked.");
             _context.Attach(entity);
         }
 
         public void Detach(T entity)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity), "Repository: Parameter entity is null.");
+            if (_context.Entry(entity).State == EntityState.Detached)
+                throw new InvalidOperationException("Repository: Entity is already detached.");
             _context.Entry(entity).State = EntityState.Detached;
         }
 
@@ -110,11 +116,16 @@ namespace M_SAVA_DAL.Repositories
 
         public void ChangeTrackingState(object entity, EntityState state)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity), "Repository: Parameter entity is null.");
+            if (!Enum.IsDefined(typeof(EntityState), state))
+                throw new ArgumentException("Repository: Invalid EntityState value.", nameof(state));
             _context.Entry(entity).State = state;
         }
 
         public void MarkPropertyAsModified<TProperty>(T entity, Expression<Func<T, TProperty>> propertyExpression)
         {
+            if (entity == null) throw new ArgumentNullException(nameof(entity), "Repository: Parameter entity is null.");
+            if (propertyExpression == null) throw new ArgumentNullException(nameof(propertyExpression), "Repository: Property expression is null.");
             _context.Entry(entity).Property(propertyExpression).IsModified = true;
         }
     }

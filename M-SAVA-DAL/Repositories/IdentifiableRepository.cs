@@ -14,27 +14,32 @@ namespace M_SAVA_DAL.Repositories
     {
         public IdentifiableRepository(BaseDataContext context) : base(context)
         {
-
+            if (context == null) throw new ArgumentNullException(nameof(context), "Repository: BaseDataContext cannot be null.");
         }
 
         public T GetById(Guid id)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
             return _entities.AsNoTracking().SingleOrDefault(s => s.Id == id)
                 ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");
         }
 
         public async Task<T> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
             return await _entities.AsNoTracking().SingleOrDefaultAsync(s => s.Id == id, cancellationToken)
                 ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");
         }
 
         public T GetById(Guid id, params Expression<Func<T, object>>[] includes)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
+            if (includes == null) throw new ArgumentNullException(nameof(includes), "Repository: includes cannot be null.");
             var query = _entities.AsNoTracking().AsQueryable();
 
             foreach (var include in includes)
             {
+                if (include == null) throw new ArgumentNullException(nameof(include), "Repository: include expression cannot be null.");
                 query = query.Include(include);
             }
 
@@ -44,11 +49,14 @@ namespace M_SAVA_DAL.Repositories
 
         public async Task<T> GetByIdAsync(Guid id, params Expression<Func<T, object>>[] includes)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
+            if (includes == null) throw new ArgumentNullException(nameof(includes), "Repository: includes cannot be null.");
             var query = _entities.AsNoTracking().AsQueryable();
 
             // Apply each include expression to the query
             foreach (var include in includes)
             {
+                if (include == null) throw new ArgumentNullException(nameof(include), "Repository: include expression cannot be null.");
                 query = query.Include(include);
             }
 
@@ -58,6 +66,7 @@ namespace M_SAVA_DAL.Repositories
 
         public IQueryable<T> GetRangeByIds(IEnumerable<Guid> ids)
         {
+            if (ids == null) throw new ArgumentNullException(nameof(ids), "Repository: ids cannot be null.");
             var idList = ids.ToList();
             if (!idList.Any())
                 return Enumerable.Empty<T>().AsQueryable();
@@ -67,6 +76,7 @@ namespace M_SAVA_DAL.Repositories
 
         public void DeleteById(Guid id)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
             var entity = _entities.SingleOrDefault(s => s.Id == id);
             if (entity != null)
             {
@@ -80,6 +90,7 @@ namespace M_SAVA_DAL.Repositories
 
         public async Task DeleteByIdAsync(Guid id)
         {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
             var entity = await _entities.SingleOrDefaultAsync(s => s.Id == id);
             if (entity != null)
             {
@@ -93,6 +104,7 @@ namespace M_SAVA_DAL.Repositories
 
         public void DeleteRangeByIds(IEnumerable<Guid> ids)
         {
+            if (ids == null) throw new ArgumentNullException(nameof(ids), "Repository: ids cannot be null.");
             var idList = ids.ToList();
             if (!idList.Any())
                 return;
@@ -109,6 +121,7 @@ namespace M_SAVA_DAL.Repositories
 
         public async Task DeleteRangeByIdsAsync(IEnumerable<Guid> ids)
         {
+            if (ids == null) throw new ArgumentNullException(nameof(ids), "Repository: ids cannot be null.");
             var idList = ids.ToList();
             if (!idList.Any())
                 return;

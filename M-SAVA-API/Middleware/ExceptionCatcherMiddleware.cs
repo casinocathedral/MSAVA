@@ -1,9 +1,15 @@
 ﻿using M_SAVA_BLL.Models;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
-using System.Net;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Runtime.InteropServices;
+using Microsoft.IdentityModel.Tokens;
 
 namespace M_SAVA_API.Middleware
 {
@@ -59,34 +65,131 @@ namespace M_SAVA_API.Middleware
 
         private static async Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
         {
-            int statusCode = (int)HttpStatusCode.InternalServerError;
+            int statusCode = StatusCodes.Status500InternalServerError;
             string message = exception.Message;
             string? stack = null;
 
-            if (exception is UnauthorizedAccessException)
+            switch (exception)
             {
-                statusCode = (int)HttpStatusCode.Unauthorized;
-            }
-            else if (exception is KeyNotFoundException)
-            {
-                statusCode = (int)HttpStatusCode.NotFound;
+                // --- Use status code from exception ---
+                case BadHttpRequestException badReq:
+                    statusCode = badReq.StatusCode;
+                    break;
+                // --- 501 Not Implemented ---
+                case PlatformNotSupportedException _:
+                case NotImplementedException _:
+                    statusCode = StatusCodes.Status501NotImplemented;
+                    break;
+                // --- 502 Bad Gateway ---
+                case HttpRequestException _:
+                case System.Net.Sockets.SocketException _:
+                case System.Net.WebException _:
+                    statusCode = StatusCodes.Status502BadGateway;
+                    break;
+                // --- 400 Bad Request ---
+                case ArgumentNullException _:
+                case ArgumentOutOfRangeException _:
+                case ArgumentException _:
+                case FormatException _:
+                case InvalidDataException _:
+                case SerializationException _:
+                case System.Net.ProtocolViolationException _:
+                case JsonException _:
+                case System.Xml.XmlException _:
+                case CryptographicException _:
+                case IndexOutOfRangeException _:
+                case OverflowException _:
+                case DivideByZeroException _:
+                case ObjectDisposedException _:
+                case InvalidCastException:
+                case NotFiniteNumberException:
+                    statusCode = StatusCodes.Status400BadRequest;
+                    break;
+                // --- 401 Unauthorized ---
+                case UnauthorizedAccessException _:
+                case System.Security.Authentication.AuthenticationException _:
+                case SecurityTokenException _:
+                    statusCode = StatusCodes.Status401Unauthorized;
+                    break;
+                // --- 403 Forbidden ---
+                case System.Security.SecurityException _:
+                case AccessViolationException _:
+                    statusCode = StatusCodes.Status403Forbidden;
+                    break;
+                // --- 404 Not Found ---
+                case KeyNotFoundException _:
+                case FileNotFoundException _:
+                case DirectoryNotFoundException _:
+                case FileLoadException _:
+                    statusCode = StatusCodes.Status404NotFound;
+                    break;
+                // --- 405 Method Not Allowed ---
+                case NotSupportedException _:
+                    statusCode = StatusCodes.Status405MethodNotAllowed;
+                    break;
+                // --- 408 Request Timeout ---
+                case TaskCanceledException _:
+                    statusCode = StatusCodes.Status408RequestTimeout;
+                    break;
+                // --- 409 Conflict ---
+                case DbUpdateConcurrencyException _:
+                case InvalidOperationException _:
+                case DbUpdateException _:
+                    statusCode = StatusCodes.Status409Conflict;
+                    break;
+                // --- 414 URI Too Long ---
+                case PathTooLongException _:
+                    statusCode = StatusCodes.Status414UriTooLong;
+                    break;
+                // --- 422 Unprocessable Entity ---
+                case ValidationException _:
+                    statusCode = StatusCodes.Status422UnprocessableEntity;
+                    break;
+                // --- 500 Internal Server Error ---
+                case AggregateException _:
+                case DllNotFoundException _:
+                case InsufficientMemoryException _:
+                case ApplicationException _:
+                case OutOfMemoryException _:
+                case StackOverflowException _:
+                case System.Data.DataException _:
+                case ReflectionTypeLoadException _:
+                case TypeLoadException _:
+                case MissingMethodException _:
+                case MemberAccessException _:
+                case NullReferenceException _:
+                case ExternalException _:
+                    statusCode = StatusCodes.Status500InternalServerError;
+                    break;
+                // --- 503 Service Unavailable ---
+                case OperationCanceledException _:
+                case IOException _:
+                    statusCode = StatusCodes.Status503ServiceUnavailable;
+                    break;
+                // --- 504 Gateway Timeout ---
+                case TimeoutException _:
+                    statusCode = StatusCodes.Status504GatewayTimeout;
+                    break;
             }
 
             if (isDevelopment)
             {
                 stack = exception.ToString();
-                var devResponse = new ErrorLogDTO { Id = Guid.Empty, Message = message, StackTrace = stack, Timestamp = DateTime.UtcNow, User = null };
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = statusCode;
-                await context.Response.WriteAsync(JsonSerializer.Serialize(devResponse));
             }
-            else
+
+            var responseDto = new ErrorLogDTO
             {
-                var prodResponse = new ErrorLogDTO { Id = Guid.Empty, Message = message, StackTrace = null, Timestamp = DateTime.UtcNow, User = null };
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = statusCode;
-                await context.Response.WriteAsync(JsonSerializer.Serialize(prodResponse));
-            }
+                Id = Guid.Empty,
+                Message = message,
+                StackTrace = stack,
+                Timestamp = DateTime.UtcNow,
+                User = null
+            };
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = statusCode;
+            await context.Response.WriteAsync(JsonSerializer.Serialize(responseDto));
         }
+
     }
 }
