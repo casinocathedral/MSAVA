@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Services
 {
-    public class SearchFileService
+    public class SearchFileService : ISearchFileService
     {
         private readonly IIdentifiableRepository<SavedFileDataDB> _dataRepository;
 

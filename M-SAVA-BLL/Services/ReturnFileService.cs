@@ -14,7 +14,7 @@ using M_SAVA_INF.Managers;
 
 namespace M_SAVA_BLL.Services
 {
-    public class ReturnFileService
+    public class ReturnFileService : IReturnFileService
     {
         private readonly IIdentifiableRepository<SavedFileReferenceDB> _savedFileRepository;
         private readonly FileManager _fileManager;

@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Services
 {
-    public class LoginService
+    public class LoginService : ILoginService
     {
         private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly IIdentifiableRepository<JwtDB> _jwtRepository;
@@ -101,16 +101,16 @@ namespace M_SAVA_BLL.Services
             return jwtDb;
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequestDTO request, CancellationToken cancellationToken = default)
+        public async Task<Guid> RegisterAsync(RegisterRequestDTO request, CancellationToken cancellationToken = default)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             bool exists = await _userRepository.GetAllAsReadOnly()
                 .AnyAsync(u => u.Username == request.Username, cancellationToken);
             if (exists)
-                return false;
+                throw new InvalidOperationException("Username already exists.");
 
             if (request.InviteCode == Guid.Empty)
-                return false;
+                throw new InvalidOperationException("Invite code is required.");
 
             byte[] salt = GenerateSalt();
             byte[] hash = HashPassword(request.Password, salt);
@@ -126,7 +126,7 @@ namespace M_SAVA_BLL.Services
             _userRepository.Insert(user);
             await _userRepository.CommitAsync();
 
-            return true;
+            return user.Id;
         }
 
         private static byte[] GenerateSalt()

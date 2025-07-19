@@ -17,7 +17,7 @@ using M_SAVA_INF.Utils;
 
 namespace M_SAVA_BLL.Services
 {
-    public class SaveFileService
+    public class SaveFileService : ISaveFileService
     {
         private readonly IIdentifiableRepository<SavedFileReferenceDB> _savedRefsRepository;
         private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;

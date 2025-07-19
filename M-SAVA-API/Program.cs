@@ -65,11 +65,11 @@ builder.Services.AddDbContext<BaseDataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MainDatabaseConnection")));
 
 // Register services
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<ReturnFileService>();
-builder.Services.AddScoped<SaveFileService>();
-builder.Services.AddScoped<LoginService>();
-builder.Services.AddScoped<SearchFileService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IReturnFileService, ReturnFileService>();
+builder.Services.AddScoped<ISaveFileService, SaveFileService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<ISearchFileService, SearchFileService>();
 
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();

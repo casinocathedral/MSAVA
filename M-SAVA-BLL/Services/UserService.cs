@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly IIdentifiableRepository<UserDB> _userRepository;
 
