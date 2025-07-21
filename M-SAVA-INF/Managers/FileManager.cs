@@ -1,4 +1,6 @@
-﻿using M_SAVA_INF.Utils;
+﻿using M_SAVA_INF.Models;
+using M_SAVA_INF.Utils;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +12,21 @@ namespace M_SAVA_INF.Managers
 {
     public class FileManager
     {
-        public async Task SaveFileContentAsync(byte[] fileHash, string fileExtension, Stream contentStream, CancellationToken cancellationToken = default, bool overwrite = false)
+        public string fileRootPath { get; } = Path.Combine(AppContext.BaseDirectory, "Data");
+        public FileManager()
+        {
+            if (!Directory.Exists(fileRootPath))
+            {
+                Directory.CreateDirectory(fileRootPath);
+            }
+        }
+
+        public string GetFileRootPath()
+        {
+            return fileRootPath;
+        }
+
+        public async Task SaveFileContentAsync(SavedFileMetaJSON fileMeta, byte[] fileHash, string fileExtension, Stream contentStream, CancellationToken cancellationToken = default, bool overwrite = false)
         {
             if (contentStream == null) throw new ArgumentNullException(nameof(contentStream));
             if (!contentStream.CanSeek)
@@ -35,12 +51,16 @@ namespace M_SAVA_INF.Managers
             string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
             if (!overwrite && File.Exists(path))
             {
-                return;
+                throw new IOException($"File already exists at path: {path}");
             }
             using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
             {
                 await contentStream.CopyToAsync(fileStream, cancellationToken);
             }
+
+            string metaPath = path + ".meta.json";
+            var metaJson = System.Text.Json.JsonSerializer.Serialize(fileMeta);
+            await File.WriteAllTextAsync(metaPath, metaJson, cancellationToken);
         }
 
         public FileStream? GetFileStream(byte[] fileHash, string fileExtension, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read)
@@ -49,6 +69,21 @@ namespace M_SAVA_INF.Managers
             if (!File.Exists(path))
                 return null;
             return new FileStream(path, mode, access, FileShare.Read, 81920, useAsync: true);
+        }
+
+        public PhysicalFileResult GetPhysicalFile(string filePath, string contentType)
+        {
+            string fullPath = Path.GetFullPath(Path.Combine(fileRootPath, filePath));
+
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"File not found: {filePath}", fullPath);
+
+            var fileName = Path.GetFileName(fullPath);
+            return new PhysicalFileResult(fullPath, contentType)
+            {
+                FileDownloadName = fileName,
+                EnableRangeProcessing = true
+            };
         }
 
         public bool FileExists(byte[] fileHash, string fileExtension)

@@ -44,17 +44,19 @@ namespace M_SAVA_INF.Environment
             return dict;
         }
 
-        public string? GetValue(string key)
+        public string GetValue(string key)
         {
-            _values.TryGetValue(key, out var value);
-            return value;
+            if (_values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+                return value;
+
+            throw new KeyNotFoundException($"Environment variable '{key}' is not set or is empty in {EnvFileName}");
         }
 
         public byte[] GetSigningKeyBytes()
         {
-            var key = GetValue("issuer_signing_key");
+            string key = GetValue("issuer_signing_key");
             if (string.IsNullOrWhiteSpace(key))
-                throw new InvalidOperationException($"issuer_signing_key is missing in {EnvFileName}");
+                throw new InvalidOperationException($"'issuer_signing_key' is missing or empty in {EnvFileName}");
             return Encoding.UTF8.GetBytes(key);
         }
     }

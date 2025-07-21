@@ -6,8 +6,9 @@ namespace M_SAVA_BLL.Models
 {
     public class SearchFileDataDTO
     {
-        public Guid DataId { get; set; }
-        public Guid RefId { get; set; }
+        public required Guid DataId { get; set; }
+        public required Guid RefId { get; set; }
+        public required string FilePath { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public required string MimeType { get; set; }

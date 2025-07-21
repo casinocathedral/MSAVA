@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Models
 {
-    public class ReturnFileDTO
+    public class StreamReturnFileDTO
     {
         public required Guid Id { get; set; }
         public required string FileName { get; set; }

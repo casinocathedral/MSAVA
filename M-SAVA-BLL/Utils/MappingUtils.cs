@@ -1,6 +1,7 @@
 ﻿using M_SAVA_BLL.Models;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Utils;
+using M_SAVA_INF.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_BLL.Utils
 {
-    public static class DataMappingUtils
+    public static class MappingUtils
     {
         public static FileExtensionType ParseFileExtension(string extension)
         {
@@ -38,7 +39,7 @@ namespace M_SAVA_BLL.Utils
                 fileHash = sha256.ComputeHash(dto.Stream);
             }
 
-            FileExtensionType extension = DataMappingUtils.ParseFileExtension(dto.FileExtension);
+            FileExtensionType extension = MappingUtils.ParseFileExtension(dto.FileExtension);
 
             SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
             {
@@ -46,14 +47,13 @@ namespace M_SAVA_BLL.Utils
                 FileHash = fileHash,
                 FileExtension = extension,
                 PublicDownload = dto.PublicDownload,
-                PublicViewing = dto.PublicViewing,
                 AccessGroupId = dto.AccessGroupId
             };
 
             return savedFileDb;
         }
 
-        public static ReturnFileDTO MapReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
+        public static StreamReturnFileDTO MapReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
         {
             string fileName = GetFileName(db);
 
@@ -77,7 +77,7 @@ namespace M_SAVA_BLL.Utils
                 throw new ArgumentException("Either fileBytes or fileStream must be provided.");
             }
 
-            return new ReturnFileDTO
+            return new StreamReturnFileDTO
             {
                 Id = db.Id,
                 FileName = fileName,
@@ -140,14 +140,23 @@ namespace M_SAVA_BLL.Utils
 
         public static SearchFileDataDTO MapSearchFileDataDTO(SavedFileDataDB db)
         {
+            if (db.FileReference == null)
+            {
+                throw new ArgumentException("FileReference cannot be null", nameof(db));
+            }
+            string fileExtension = FileExtensionUtils.GetFileExtension(db.FileReference);
+            string fileName = MappingUtils.GetFileName(db.FileReference);
+            string filePath = Path.Combine(fileName, fileExtension);
+
             return new SearchFileDataDTO
             {
                 DataId = db.Id,
                 RefId = db.FileReference?.Id ?? Guid.Empty,
+                FilePath = filePath,
                 Name = db.Name,
                 Description = db.Description,
                 MimeType = db.MimeType,
-                FileExtension = db.FileExtension,
+                FileExtension = fileExtension,
                 Tags = db.Tags,
                 Categories = db.Categories,
                 SizeInBytes = db.SizeInBytes,
@@ -159,6 +168,16 @@ namespace M_SAVA_BLL.Utils
                 LastModifiedAt = db.LastModifiedAt,
                 OwnerId = db.Owner?.Id ?? Guid.Empty,
                 LastModifiedById = db.LastModifiedBy?.Id ?? Guid.Empty
+            };
+        }
+
+        public static SavedFileMetaJSON MapSavedFileMetaJSON(SavedFileReferenceDB db)
+        {
+            return new SavedFileMetaJSON
+            {
+                RefId = db.Id,
+                PublicDownload = db.PublicDownload,
+                AccessGroupId = db.AccessGroupId
             };
         }
     }

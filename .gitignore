@@ -19,7 +19,7 @@ wwwroot/_framework/
 service-worker-assets.js
 
 # .env file
-M-SAVA-INF/Environment/.env
+M-SAVA-INF/.env
 
 ## Original below: https://gist.github.com/takekazuomi/10955889
 ## Ignore Visual Studio temporary files, build results, and

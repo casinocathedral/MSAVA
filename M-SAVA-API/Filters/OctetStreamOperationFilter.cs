@@ -3,22 +3,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-public class OctetStreamOperationFilter : IOperationFilter
+namespace M_SAVA_API.Filters
 {
-    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    public class OctetStreamOperationFilter : IOperationFilter
     {
-        var hasOctet = context.MethodInfo
-            .GetCustomAttributes(typeof(ConsumesAttribute), false)
-            .OfType<ConsumesAttribute>()
-            .Any(a => a.ContentTypes.Contains("application/octet-stream"));
-
-        if (!hasOctet)
-            return;
-
-        operation.RequestBody = new OpenApiRequestBody
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            Required = true,
-            Content =
+            var hasOctet = context.MethodInfo
+                .GetCustomAttributes(typeof(ConsumesAttribute), false)
+                .OfType<ConsumesAttribute>()
+                .Any(a => a.ContentTypes.Contains("application/octet-stream"));
+
+            if (!hasOctet)
+                return;
+
+            operation.RequestBody = new OpenApiRequestBody
+            {
+                Required = true,
+                Content =
             {
                 ["application/octet-stream"] = new OpenApiMediaType
                 {
@@ -29,6 +31,7 @@ public class OctetStreamOperationFilter : IOperationFilter
                     }
                 }
             }
-        };
+            };
+        }
     }
 }

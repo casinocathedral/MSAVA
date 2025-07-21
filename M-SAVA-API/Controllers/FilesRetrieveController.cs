@@ -1,4 +1,5 @@
-﻿using M_SAVA_BLL.Services;
+﻿using M_SAVA_BLL.Models;
+using M_SAVA_BLL.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,16 +15,26 @@ namespace M_SAVA_API.Controllers
     public class FilesRetrieveController : ControllerBase
     {
         private readonly IReturnFileService _returnFileService;
+        private readonly IWebHostEnvironment _env;
 
-        public FilesRetrieveController(IReturnFileService returnFileService)
+        public FilesRetrieveController(IReturnFileService returnFileService, IWebHostEnvironment env)
         {
             _returnFileService = returnFileService ?? throw new ArgumentNullException(nameof(returnFileService));
+            _env = env;
         }
 
-        [HttpGet("{id:guid}")]
-        public IActionResult GetFileById(Guid refId)
+        [HttpGet("stream/{refId:guid}")]
+        public IActionResult GetFileStreamById(Guid refId)
         {
-            return _returnFileService.GetFileById(refId).FileStream;
+            return _returnFileService.GetFileStreamById(refId).FileStream;
+        }
+
+        [HttpGet("physical/{refId:guid}")]
+        public IActionResult GetPhysicalFileById(Guid refId)
+        {
+            PhysicalReturnFileDTO fileData = _returnFileService.GetPhysicalFileReturnDataById(refId);
+
+            return PhysicalFile(fileData.FilePath, fileData.ContentType, fileData.FileName, enableRangeProcessing: true);
         }
     }
 }

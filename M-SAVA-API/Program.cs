@@ -1,19 +1,22 @@
-﻿using M_SAVA_BLL.Services;
+﻿using M_SAVA_API.Filters;
+using M_SAVA_API.Handlers;
+using M_SAVA_API.Middleware;
+using M_SAVA_BLL.Services;
 using M_SAVA_DAL.Contexts;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
-using Microsoft.EntityFrameworkCore;
+using M_SAVA_INF.Environment;
+using M_SAVA_INF.Managers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using M_SAVA_INF.Environment;
-using Microsoft.AspNetCore.Authorization;
-using M_SAVA_API.Handlers;
-using M_SAVA_INF.Managers;
-using M_SAVA_API.Middleware;
+using System.Text.Json;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -59,6 +62,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.OperationFilter<OctetStreamOperationFilter>();
+    c.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
 // Register main database context
@@ -102,7 +106,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -114,6 +118,41 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "Data")),
+    RequestPath = "/publicfiles",
+    OnPrepareResponse = ctx =>
+    {
+        var filePath = ctx.File.PhysicalPath;
+        var metaPath = filePath + ".meta.json";
+
+        if (!System.IO.File.Exists(metaPath))
+        {
+            ctx.Context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            ctx.Context.Abort();
+            return;
+        }
+
+        try
+        {
+            var metaJson = System.IO.File.ReadAllText(metaPath);
+            var metaDoc = JsonDocument.Parse(metaJson);
+
+            if (!metaDoc.RootElement.TryGetProperty("public", out var publicProp) || !publicProp.GetBoolean())
+            {
+                ctx.Context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                ctx.Context.Abort();
+            }
+        }
+        catch
+        {
+            ctx.Context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            ctx.Context.Abort();
+        }
+    }
+});
 
 app.UseMiddleware<ExceptionCatcherMiddleware>();
 

@@ -14,6 +14,7 @@ using M_SAVA_BLL.Utils;
 using System.Text.Json;
 using M_SAVA_INF.Managers;
 using M_SAVA_INF.Utils;
+using M_SAVA_INF.Models;
 
 namespace M_SAVA_BLL.Services
 {
@@ -32,9 +33,13 @@ namespace M_SAVA_BLL.Services
 
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
         {
-            SavedFileReferenceDB savedFileDb = DataMappingUtils.MapSavedFileReferenceDB(dto);
 
-            var savedFileDataDb = DataMappingUtils.MapSavedFileDataDB(
+            SavedFileReferenceDB savedFileDb = MappingUtils.MapSavedFileReferenceDB(dto);
+            SavedFileMetaJSON savedFileMetaJSON = MappingUtils.MapSavedFileMetaJSON(savedFileDb);
+
+            await _fileManager.SaveFileContentAsync(savedFileMetaJSON, savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), dto.Stream, cancellationToken);
+
+            var savedFileDataDb = MappingUtils.MapSavedFileDataDB(
                 dto,
                 savedFileDb,
                 sessionUserId,
@@ -47,29 +52,7 @@ namespace M_SAVA_BLL.Services
             _savedRefsRepository.Insert(savedFileDb);
             await _savedRefsRepository.CommitAsync();
 
-            await _fileManager.SaveFileContentAsync(savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), dto.Stream, cancellationToken);
-
             return savedFileDb.Id;
-        }
-
-        public async Task UpdateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
-        {
-            SavedFileReferenceDB savedFileDb = DataMappingUtils.MapSavedFileReferenceDB(dto);
-
-            var existingData = await _savedDataRepository.GetByIdAsync(dto.Id ?? Guid.Empty, cancellationToken);
-            var savedFileDataDb = DataMappingUtils.MapSavedFileDataDB(
-                dto,
-                savedFileDb,
-                existingData.OwnerId,
-                sessionUserId
-            );
-            _savedDataRepository.Update(savedFileDataDb);
-            await _savedDataRepository.CommitAsync();
-
-            _savedRefsRepository.Update(savedFileDb);
-            await _savedRefsRepository.CommitAsync();
-
-            await _fileManager.SaveFileContentAsync(savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), dto.Stream, cancellationToken, true);
         }
 
         public async Task DeleteFileAsync(Guid id, CancellationToken cancellationToken = default)
