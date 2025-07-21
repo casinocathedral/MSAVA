@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace M_SAVA_INF.Managers
 {
@@ -99,6 +100,39 @@ namespace M_SAVA_INF.Managers
             {
                 File.Delete(path);
             }
+        }
+
+        public bool CheckFileAccessByPath(string fullPath, List<Guid> userAccessGroups)
+        {
+            if (!File.Exists(fullPath))
+            {
+                throw new FileNotFoundException($"The file '{fullPath}' does not exist.");
+            }
+
+            string metaPath = fullPath + ".meta.json";
+
+            if (!File.Exists(metaPath))
+            {
+                throw new UnauthorizedAccessException($"Meta file '{metaPath}' does not exist.");
+            }
+
+            var metaJson = File.ReadAllText(metaPath);
+            var meta = JsonSerializer.Deserialize<SavedFileMetaJSON>(metaJson);
+
+            if (meta == null)
+            {
+                throw new FileNotFoundException($"Meta file '{metaPath}' is invalid.");
+            }
+            if (meta.PublicDownload)
+            {
+                return true;
+            }
+            if (userAccessGroups == null || !userAccessGroups.Contains(meta.AccessGroupId))
+            {
+                throw new UnauthorizedAccessException("User does not have access to this file's access group.");
+            }
+
+            return true;
         }
     }
 }

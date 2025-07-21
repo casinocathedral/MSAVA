@@ -69,12 +69,17 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<BaseDataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MainDatabaseConnection")));
 
+// Register IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IReturnFileService, ReturnFileService>();
 builder.Services.AddScoped<ISaveFileService, SaveFileService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ISearchFileService, SearchFileService>();
+builder.Services.AddScoped<ISeedingService, SeedingService>();
+builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
 
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();
@@ -102,7 +107,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero, 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(M_SAVA_INF.Environment.Environment.Instance.GetSigningKeyBytes())
+            IssuerSigningKey = new SymmetricSecurityKey(LocalEnvironment.Instance.GetSigningKeyBytes())
         };
     });
 
@@ -156,9 +161,16 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseMiddleware<ExceptionCatcherMiddleware>();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
+app.UseMiddleware<RequestContextMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<ISeedingService>();
+    seeder.Seed();
+}
 
 app.Run();

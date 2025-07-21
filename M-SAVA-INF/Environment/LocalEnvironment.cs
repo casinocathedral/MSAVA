@@ -5,16 +5,16 @@ using System.Text;
 
 namespace M_SAVA_INF.Environment
 {
-    public class Environment
+    public class LocalEnvironment : ILocalEnvironment
     {
         private readonly Dictionary<string, string> _values;
-        private static readonly string EnvFolder = Path.GetDirectoryName(typeof(Environment).Assembly.Location)!;
+        private static readonly string EnvFolder = Path.GetDirectoryName(typeof(LocalEnvironment).Assembly.Location)!;
         private static readonly string EnvFileName = IsDevelopment() ? ".env.development" : ".env";
         private static readonly string EnvFilePath = Path.Combine(EnvFolder, EnvFileName);
 
-        public static Environment Instance { get; } = new Environment();
+        public static LocalEnvironment Instance { get; } = new LocalEnvironment();
 
-        private Environment()
+        public LocalEnvironment()
         {
             _values = LoadEnvFile(EnvFilePath);
         }

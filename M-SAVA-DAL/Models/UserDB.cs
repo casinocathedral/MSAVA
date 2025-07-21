@@ -17,5 +17,6 @@ namespace M_SAVA_DAL.Models
         public bool IsBanned { get; set; }
         public bool IsWhitelisted { get; set; }
         public Guid InviteCode { get; set; }
+        public ICollection<AccessGroupDB> AccessGroups { get; set; } = new List<AccessGroupDB>();
     }
 }

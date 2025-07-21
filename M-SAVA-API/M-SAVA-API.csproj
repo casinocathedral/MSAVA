@@ -24,8 +24,4 @@
     <ProjectReference Include="..\M-SAVA-INF\M-SAVA-INF.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Attributes\" />
-  </ItemGroup>
-
 </Project>

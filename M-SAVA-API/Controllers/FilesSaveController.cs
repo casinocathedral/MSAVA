@@ -25,7 +25,7 @@ namespace M_SAVA_API.Controllers
             _saveFileService = saveFileService ?? throw new ArgumentNullException(nameof(saveFileService));
         }
 
-        [HttpPost]
+        [HttpPost("stream")]
         [Consumes("application/octet-stream")]
         public async Task<ActionResult<Guid>> CreateFile(
             [FromQuery] string fileName,
@@ -51,41 +51,8 @@ namespace M_SAVA_API.Controllers
                 Stream = Request.Body
             };
 
-            Guid sessionUserId = AuthUtils.GetUserId(User);
-            Guid id = await _saveFileService.CreateFileAsync(dto, sessionUserId, cancellationToken);
+            Guid id = await _saveFileService.CreateFileAsync(dto, cancellationToken);
             return Ok(id);
-        }
-
-        [HttpPut("{id:guid}")]
-        [Consumes("application/octet-stream")]
-        public async Task<IActionResult> UpdateFile(Guid id,
-            [FromQuery] string fileName,
-            [FromQuery] string fileExtension,
-            [FromQuery] List<string>? tags,
-            [FromQuery] List<string>? categories,
-            [FromQuery] Guid accessGroup,
-            [FromQuery] string? description,
-            [FromQuery] bool publicViewing = false,
-            [FromQuery] bool publicDownload = false,
-            CancellationToken cancellationToken = default)
-        {
-            FileToSaveDTO dto = new FileToSaveDTO
-            {
-                Id = id,
-                FileName = fileName,
-                FileExtension = fileExtension,
-                Tags = tags,
-                Categories = categories,
-                AccessGroupId = accessGroup,
-                Description = description,
-                PublicViewing = publicViewing,
-                PublicDownload = publicDownload,
-                Stream = Request.Body
-            };
-
-            Guid sessionUserId = AuthUtils.GetUserId(User);
-            await _saveFileService.UpdateFileAsync(dto, sessionUserId, cancellationToken);
-            return NoContent();
         }
     }
 }

@@ -11,8 +11,9 @@ namespace M_SAVA_BLL.Services
     {
         UserDB GetUserById(Guid id);
         Task<UserDB> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        IEnumerable<UserDB> GetAllUsers();
+        List<UserDB> GetAllUsers();
         void DeleteUser(Guid id);
         Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
+        UserDB GetSessionUser();
     }
 }

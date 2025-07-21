@@ -6,13 +6,13 @@ using M_SAVA_BLL.Services;
 
 namespace M_SAVA_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
-    public class LoginController : ControllerBase
+    public class AuthenticationController : ControllerBase
     {
         private readonly ILoginService _loginService;
 
-        public LoginController(ILoginService loginService)
+        public AuthenticationController(ILoginService loginService)
         {
             _loginService = loginService;
         }

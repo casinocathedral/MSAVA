@@ -9,7 +9,7 @@ namespace M_SAVA_BLL.Services
 {
     public interface ISaveFileService
     {
-        Task<Guid> CreateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default);
+        Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default);
         Task DeleteFileAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

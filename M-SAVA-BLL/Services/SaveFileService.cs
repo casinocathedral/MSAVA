@@ -23,16 +23,29 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<SavedFileReferenceDB> _savedRefsRepository;
         private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;
         private readonly FileManager _fileManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SaveFileService(IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository, IIdentifiableRepository<SavedFileDataDB> savedDataRepository, IUserService userService, FileManager fileManager)
+        public SaveFileService(
+            IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository,
+            IIdentifiableRepository<SavedFileDataDB> savedDataRepository,
+            IUserService userService,
+            FileManager fileManager,
+            IHttpContextAccessor httpContextAccessor)
         {
             _savedRefsRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
             _savedDataRepository = savedDataRepository ?? throw new ArgumentNullException(nameof(savedDataRepository), "Service: savedDataRepository cannot be null.");
             _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager), "Service: fileManager cannot be null.");
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor), "Service: httpContextAccessor cannot be null.");
         }
 
-        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, Guid sessionUserId, CancellationToken cancellationToken = default)
+        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
+            Guid sessionUserId = Guid.Empty;
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
+            {
+                sessionUserId = sessionDto.UserId;
+            }
 
             SavedFileReferenceDB savedFileDb = MappingUtils.MapSavedFileReferenceDB(dto);
             SavedFileMetaJSON savedFileMetaJSON = MappingUtils.MapSavedFileMetaJSON(savedFileDb);

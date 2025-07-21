@@ -11,8 +11,6 @@ namespace M_SAVA_BLL.Services
     public interface IReturnFileService
     {
         StreamReturnFileDTO GetFileStreamById(Guid id);
-        PhysicalFileResult GetFileByPath(string filePath);
-        PhysicalReturnFileDTO GetPhysicalFileReturnData(string filePath);
-        PhysicalReturnFileDTO GetPhysicalFileReturnDataById(Guid id);
+        PhysicalReturnFileDTO GetPhysicalFileReturnDataByPath(string path);
     }
 }

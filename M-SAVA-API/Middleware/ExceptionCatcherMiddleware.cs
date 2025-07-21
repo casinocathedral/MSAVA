@@ -33,13 +33,15 @@ namespace M_SAVA_API.Middleware
             }
             catch (Exception ex)
             {
+                Guid errorId = Guid.NewGuid();
+                DateTime timestamp = DateTime.UtcNow;
                 logger.LogError(ex, "Unhandled exception occurred");
-                LogError(context, ex, errorLogRepository);
-                await HandleExceptionAsync(context, ex, env.IsDevelopment());
+                LogError(errorId, timestamp, context, ex, errorLogRepository);
+                await HandleExceptionAsync(errorId, timestamp, context, ex, env.IsDevelopment());
             }
         }
 
-        private void LogError(HttpContext context, Exception exception, IIdentifiableRepository<ErrorLogDB> errorLogRepository)
+        private void LogError(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, IIdentifiableRepository<ErrorLogDB> errorLogRepository)
         {
             Guid? userId = null;
             if (context.User?.Identity?.IsAuthenticated == true)
@@ -53,17 +55,17 @@ namespace M_SAVA_API.Middleware
 
             var errorLog = new ErrorLogDB
             {
-                Id = Guid.NewGuid(),
+                Id = errorId,
                 Message = exception.Message,
                 StackTrace = exception.ToString(),
-                Timestamp = DateTime.UtcNow,
+                Timestamp = timestamp,
                 UserId = userId
             };
             errorLogRepository.Insert(errorLog);
             errorLogRepository.Commit();
         }
 
-        private static async Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
+        private static async Task HandleExceptionAsync(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, bool isDevelopment)
         {
             int statusCode = StatusCodes.Status500InternalServerError;
             string message = exception.Message;
@@ -177,13 +179,23 @@ namespace M_SAVA_API.Middleware
                 stack = exception.ToString();
             }
 
+            Guid? userId = null;
+            if (context.User?.Identity?.IsAuthenticated == true)
+            {
+                var userIdStr = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (Guid.TryParse(userIdStr, out var parsedId))
+                {
+                    userId = parsedId;
+                }
+            }
+
             var responseDto = new ErrorLogDTO
             {
-                Id = Guid.Empty,
+                Id = errorId,
                 Message = message,
                 StackTrace = stack,
-                Timestamp = DateTime.UtcNow,
-                User = null
+                Timestamp = timestamp,
+                UserId = userId
             };
 
             context.Response.ContentType = "application/json";

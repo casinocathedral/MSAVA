@@ -29,10 +29,10 @@ namespace M_SAVA_API.Controllers
             return _returnFileService.GetFileStreamById(refId).FileStream;
         }
 
-        [HttpGet("physical/{refId:guid}")]
-        public IActionResult GetPhysicalFileById(Guid refId)
+        [HttpGet("physical/{**fileNameWithExtension}")]
+        public IActionResult GetPhysicalFileByPath(string fileNameWithExtension)
         {
-            PhysicalReturnFileDTO fileData = _returnFileService.GetPhysicalFileReturnDataById(refId);
+            PhysicalReturnFileDTO fileData = _returnFileService.GetPhysicalFileReturnDataByPath(fileNameWithExtension);
 
             return PhysicalFile(fileData.FilePath, fileData.ContentType, fileData.FileName, enableRangeProcessing: true);
         }

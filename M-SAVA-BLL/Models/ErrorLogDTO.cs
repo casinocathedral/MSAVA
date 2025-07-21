@@ -13,6 +13,6 @@ namespace M_SAVA_BLL.Models
         public required string Message { get; set; }
         public string? StackTrace { get; set; }
         public required DateTime Timestamp { get; set; }
-        public required Guid? User { get; set; }
+        public required Guid? UserId { get; set; }
     }
 }
