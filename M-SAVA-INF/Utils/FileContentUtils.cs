@@ -13,7 +13,7 @@ namespace M_SAVA_INF.Utils
            Path.Combine(AppContext.BaseDirectory, "Data", "Backups");
 
         public static readonly string FilesDirectory =
-            Path.Combine(AppContext.BaseDirectory, "Data", "Files");
+            Path.Combine(AppContext.BaseDirectory, "Data");
         public static string GetFilePath(byte[] fileHash, string fileExtension)
         {
             string hashString = BitConverter.ToString(fileHash).Replace("-", "").ToLowerInvariant();

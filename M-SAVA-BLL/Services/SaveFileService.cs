@@ -47,23 +47,36 @@ namespace M_SAVA_BLL.Services
                 sessionUserId = sessionDto.UserId;
             }
 
-            SavedFileReferenceDB savedFileDb = MappingUtils.MapSavedFileReferenceDB(dto);
+            var (fileLength, fileHash, fileBytes) = await FileStreamUtils.ExtractFileStreamData(dto.Stream);
+
+            SavedFileReferenceDB savedFileDb = MappingUtils.MapSavedFileReferenceDB(
+                dto,
+                fileHash,
+                fileLength
+            );
             SavedFileMetaJSON savedFileMetaJSON = MappingUtils.MapSavedFileMetaJSON(savedFileDb);
 
-            await _fileManager.SaveFileContentAsync(savedFileMetaJSON, savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), dto.Stream, cancellationToken);
+            using (var memoryStream = new MemoryStream(fileBytes))
+            {
+                memoryStream.Position = 0;
+                await _fileManager.SaveFileContentAsync(savedFileMetaJSON, savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), memoryStream, cancellationToken);
+            }
 
-            var savedFileDataDb = MappingUtils.MapSavedFileDataDB(
+            savedFileDb.Id = Guid.NewGuid();
+
+            SavedFileDataDB savedFileDataDb = MappingUtils.MapSavedFileDataDB(
                 dto,
                 savedFileDb,
+                fileLength,
                 sessionUserId,
                 sessionUserId
             );
-            _savedDataRepository.Insert(savedFileDataDb);
-            await _savedDataRepository.CommitAsync();
 
-            savedFileDb.Id = Guid.NewGuid();
             _savedRefsRepository.Insert(savedFileDb);
             await _savedRefsRepository.CommitAsync();
+
+            _savedDataRepository.Insert(savedFileDataDb);
+            await _savedDataRepository.CommitAsync();
 
             return savedFileDb.Id;
         }

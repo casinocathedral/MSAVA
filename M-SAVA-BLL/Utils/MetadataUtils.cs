@@ -11,7 +11,7 @@ namespace M_SAVA_BLL.Utils
     public static class MetadataUtils
     {
         // Map each extension to its extractor and content type
-        private static readonly Dictionary<string, (Func<Stream, JsonDocument> Extractor, string ContentType)> ExtensionMap =
+        private static readonly Dictionary<string, (Func<Stream, long, JsonDocument> Extractor, string ContentType)> ExtensionMap =
             new(StringComparer.OrdinalIgnoreCase)
         {
             // Documents
@@ -122,13 +122,13 @@ namespace M_SAVA_BLL.Utils
             { "f4v", (ExtractDefaultMetadata, "video/x-f4v") }, // TODO
         };
 
-        public static JsonDocument ExtractMetadataFromFileStream(Stream fileStream, string extension)
+        public static JsonDocument ExtractMetadataFromFileStream(Stream fileStream, string extension, long size = -1)
         {
             if (ExtensionMap.TryGetValue(extension.ToLowerInvariant(), out var entry))
             {
-                return entry.Extractor(fileStream);
+                return entry.Extractor(fileStream, size);
             }
-            return ExtractDefaultMetadata(fileStream);
+            return ExtractDefaultMetadata(fileStream, size);
         }
 
         public static string GetContentType(string extension)
@@ -141,7 +141,7 @@ namespace M_SAVA_BLL.Utils
         }
 
         // Extractors
-        private static JsonDocument ExtractImageMetadata(Stream fileStream)
+        private static JsonDocument ExtractImageMetadata(Stream fileStream, long size)
         {
             using var image = Image.FromStream(fileStream, useEmbeddedColorManagement: false, validateImageData: false);
             var metadata = new
@@ -152,12 +152,13 @@ namespace M_SAVA_BLL.Utils
                 Height = image.Height,
                 HorizontalResolution = image.HorizontalResolution,
                 VerticalResolution = image.VerticalResolution,
-                PixelFormat = image.PixelFormat.ToString()
+                PixelFormat = image.PixelFormat.ToString(),
+                Size = size
             };
             return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
         }
 
-        private static JsonDocument ExtractOfficeDocumentMetadata(Stream fileStream)
+        private static JsonDocument ExtractOfficeDocumentMetadata(Stream fileStream, long size)
         {
             using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: true);
             var entry = archive.GetEntry("docProps/core.xml");
@@ -168,24 +169,24 @@ namespace M_SAVA_BLL.Utils
                 xmlDoc.Load(xmlStream);
                 var title = xmlDoc.SelectSingleNode("//dc:title")?.InnerText;
                 var author = xmlDoc.SelectSingleNode("//dc:creator")?.InnerText;
-                var metadata = new { Type = "OfficeDocument", Title = title, Author = author };
+                var metadata = new { Type = "OfficeDocument", Title = title, Author = author, Size = size };
                 return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
             }
-            return JsonDocument.Parse("{}");
+            return JsonDocument.Parse("{}", new JsonDocumentOptions());
         }
 
-        private static JsonDocument ExtractTextFileMetadata(Stream fileStream)
+        private static JsonDocument ExtractTextFileMetadata(Stream fileStream, long size)
         {
             using var reader = new StreamReader(fileStream);
             var content = reader.ReadToEnd();
             var lineCount = content.Split('\n').Length;
-            var metadata = new { Type = "Text", LineCount = lineCount };
+            var metadata = new { Type = "Text", LineCount = lineCount, Size = size };
             return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
         }
 
-        private static JsonDocument ExtractDefaultMetadata(Stream fileStream)
+        private static JsonDocument ExtractDefaultMetadata(Stream fileStream, long size)
         {
-            var metadata = new { Type = "Unknown", Size = fileStream.Length };
+            var metadata = new { Type = "Unknown", Size = size };
             return JsonDocument.Parse(JsonSerializer.Serialize(metadata));
         }
     }

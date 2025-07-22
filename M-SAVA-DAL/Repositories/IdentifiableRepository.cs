@@ -53,7 +53,6 @@ namespace M_SAVA_DAL.Repositories
             if (includes == null) throw new ArgumentNullException(nameof(includes), "Repository: includes cannot be null.");
             var query = _entities.AsNoTracking().AsQueryable();
 
-            // Apply each include expression to the query
             foreach (var include in includes)
             {
                 if (include == null) throw new ArgumentNullException(nameof(include), "Repository: include expression cannot be null.");

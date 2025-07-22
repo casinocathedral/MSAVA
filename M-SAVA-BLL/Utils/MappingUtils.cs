@@ -31,26 +31,20 @@ namespace M_SAVA_BLL.Utils
             return FileExtensionType.Unknown;
         }
 
-        public static SavedFileReferenceDB MapSavedFileReferenceDB(FileToSaveDTO dto)
+        public static SavedFileReferenceDB MapSavedFileReferenceDB(
+            FileToSaveDTO dto,
+            byte[] fileHash,
+            ulong fileLength)
         {
-            byte[] fileHash;
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                fileHash = sha256.ComputeHash(dto.Stream);
-            }
-
             FileExtensionType extension = MappingUtils.ParseFileExtension(dto.FileExtension);
-
-            SavedFileReferenceDB savedFileDb = new SavedFileReferenceDB
+            return new SavedFileReferenceDB
             {
-                Id = dto.Id ?? Guid.Empty,
+                Id = Guid.NewGuid(),
                 FileHash = fileHash,
                 FileExtension = extension,
                 PublicDownload = dto.PublicDownload,
                 AccessGroupId = dto.AccessGroupId
             };
-
-            return savedFileDb;
         }
 
         public static StreamReturnFileDTO MapReturnFileDTO(SavedFileReferenceDB db, byte[]? fileBytes = null, Stream? fileStream = null)
@@ -97,28 +91,20 @@ namespace M_SAVA_BLL.Utils
         public static SavedFileDataDB MapSavedFileDataDB(
             FileToSaveDTO dto,
             SavedFileReferenceDB savedFileDb,
+            ulong sizeInBytes,
             Guid owner,
-            Guid lastModifiedBy,
-            AccessGroupDB? accessGroup = null,
-            bool publicViewing = false,
-            bool publicDownload = false,
-            bool restricted = false
+            Guid lastModifiedBy
         )
         {
-            ulong sizeInBytes = (ulong)dto.Stream.Length;
-
             string checksum = BitConverter.ToString(savedFileDb.FileHash).Replace("-", "").ToLowerInvariant();
-
             string mimeType = MetadataUtils.GetContentType(dto.FileExtension);
-
             string[] tags = (dto.Tags ?? new List<string>()).ToArray();
             string[] categories = (dto.Categories ?? new List<string>()).ToArray();
-
             JsonDocument metadata = MetadataUtils.ExtractMetadataFromFileStream(dto.Stream, dto.FileExtension);
 
             return new SavedFileDataDB
             {
-                Id = dto.Id ?? Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 FileReferenceId = savedFileDb.Id,
                 SizeInBytes = sizeInBytes,
                 SavedAt = DateTime.UtcNow,

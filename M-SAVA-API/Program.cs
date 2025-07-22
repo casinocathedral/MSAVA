@@ -79,6 +79,9 @@ builder.Services.AddScoped<ISaveFileService, SaveFileService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ISearchFileService, SearchFileService>();
 builder.Services.AddScoped<ISeedingService, SeedingService>();
+builder.Services.AddScoped<AccessGroupService>();
+
+// Register singletons
 builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
 
 // Register repositories

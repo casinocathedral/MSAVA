@@ -21,7 +21,6 @@ namespace M_SAVA_BLL.Services
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        // Read
         public UserDB GetUserById(Guid id)
         {
             return _userRepository.GetById(id);
@@ -51,7 +50,6 @@ namespace M_SAVA_BLL.Services
             return _userRepository.GetAllAsReadOnly().ToList();
         }
 
-        // Delete
         public void DeleteUser(Guid id)
         {
             _userRepository.DeleteById(id);

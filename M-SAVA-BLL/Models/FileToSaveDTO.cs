@@ -9,7 +9,6 @@ namespace M_SAVA_BLL.Models
 {
     public class FileToSaveDTO
     {
-        public Guid? Id { get; set; }
         public required string FileName { get; set; }
         public required string FileExtension { get; set; }
         public required Stream Stream { get; set; } = null!;
