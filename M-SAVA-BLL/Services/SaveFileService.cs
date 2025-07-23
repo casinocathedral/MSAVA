@@ -41,28 +41,25 @@ namespace M_SAVA_BLL.Services
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
             Guid sessionUserId = Guid.Empty;
-            var httpContext = _httpContextAccessor.HttpContext;
+            HttpContext httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
             {
                 sessionUserId = sessionDto.UserId;
             }
 
-            var (fileLength, fileHash, fileBytes) = await FileStreamUtils.ExtractFileStreamData(dto.Stream);
+            var (fileLength, fileHash, fileBytes, memoryStream) = await FileStreamUtils.ExtractFileStreamData(dto.Stream);
 
             SavedFileReferenceDB savedFileDb = MappingUtils.MapSavedFileReferenceDB(
                 dto,
                 fileHash,
                 fileLength
             );
+            savedFileDb.Id = Guid.NewGuid();
+
             SavedFileMetaJSON savedFileMetaJSON = MappingUtils.MapSavedFileMetaJSON(savedFileDb);
 
-            using (var memoryStream = new MemoryStream(fileBytes))
-            {
-                memoryStream.Position = 0;
-                await _fileManager.SaveFileContentAsync(savedFileMetaJSON, savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), memoryStream, cancellationToken);
-            }
-
-            savedFileDb.Id = Guid.NewGuid();
+            memoryStream.Position = 0;
+            await _fileManager.SaveFileContentAsync(savedFileMetaJSON, savedFileDb.FileHash, savedFileDb.FileExtension.ToString(), memoryStream, cancellationToken);
 
             SavedFileDataDB savedFileDataDb = MappingUtils.MapSavedFileDataDB(
                 dto,

@@ -27,5 +27,21 @@ namespace M_SAVA_API.Controllers
             var id = await _accessGroupService.CreateAccessGroupAsync(name);
             return Ok(id);
         }
+
+        [HttpPost("adduser")]
+        public async Task<ActionResult> AddUserToAccessGroup(
+            [FromQuery] Guid userId,
+            [FromQuery] Guid accessGroupId)
+        {
+            try
+            {
+                await _accessGroupService.AddAccessGroupToUserAsync(userId, accessGroupId);
+                return Ok();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }

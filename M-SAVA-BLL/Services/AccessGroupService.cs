@@ -58,12 +58,12 @@ namespace M_SAVA_BLL.Services
             _accessGroupRepository.Insert(accessGroup);
             await _accessGroupRepository.CommitAsync();
 
-            await AddAccessGroupToUserAsync(accessGroup, user);
+            await AddAccessGroupDbToUserDbAsync(accessGroup, user);
 
             return accessGroup.Id;
         }
 
-        private async Task AddAccessGroupToUserAsync(AccessGroupDB accessGroup, UserDB user)
+        private async Task AddAccessGroupDbToUserDbAsync(AccessGroupDB accessGroup, UserDB user)
         {
             if (accessGroup.Users == null)
             {
@@ -79,6 +79,39 @@ namespace M_SAVA_BLL.Services
 
             _userRepository.Update(user);
             await _userRepository.CommitAsync();
+        }
+
+        private bool IsUserOwnerOrAdmin(UserDB user, AccessGroupDB group)
+        {
+            return user.IsAdmin || group.OwnerId == user.Id;
+        }
+
+        public async Task AddAccessGroupToUserAsync(Guid accessGroupId, Guid userId)
+        {
+            AccessGroupDB accessGroup = await _accessGroupRepository.GetByIdAsync(accessGroupId);
+            if (accessGroup == null)
+            {
+                throw new KeyNotFoundException($"AccessGroup with ID {accessGroupId} not found.");
+            }
+            UserDB user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} not found.");
+            }
+            if (!IsUserOwnerOrAdmin(_userService.GetSessionUserDB(), accessGroup))
+            {
+                throw new UnauthorizedAccessException("Only the owner or an admin can add users to this access group.");
+            }
+            if (accessGroup.Users == null)
+            {
+                accessGroup.Users = new List<UserDB>();
+            }
+            if (accessGroup.Users.Any(u => u.Id == user.Id))
+            {
+                throw new InvalidOperationException($"User with ID {user.Id} is already in AccessGroup with ID {accessGroup.Id}.");
+            }
+            
+            await AddAccessGroupDbToUserDbAsync(accessGroup, user);
         }
     }
 }
