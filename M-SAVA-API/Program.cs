@@ -147,8 +147,19 @@ app.UseStaticFiles(new StaticFileOptions
         {
             var metaJson = System.IO.File.ReadAllText(metaPath);
             var metaDoc = JsonDocument.Parse(metaJson);
-
-            if (!metaDoc.RootElement.TryGetProperty("public", out var publicProp) || !publicProp.GetBoolean())
+            bool anyPublic = false;
+            if (metaDoc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var element in metaDoc.RootElement.EnumerateArray())
+                {
+                    if (element.TryGetProperty("PublicDownload", out var publicProp) && publicProp.GetBoolean())
+                    {
+                        anyPublic = true;
+                        break;
+                    }
+                }
+            }
+            if (!anyPublic)
             {
                 ctx.Context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 ctx.Context.Abort();

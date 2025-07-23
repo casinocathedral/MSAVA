@@ -50,17 +50,33 @@ namespace M_SAVA_INF.Managers
                 contentStream.Position = 0;
 
             string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
-            if (!overwrite && File.Exists(path))
+            bool fileExists = File.Exists(path);
+            if (overwrite || !fileExists)
             {
-                throw new IOException($"File already exists at path: {path}");
-            }
-            using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
-            {
-                await contentStream.CopyToAsync(fileStream, cancellationToken);
+                using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+                {
+                    await contentStream.CopyToAsync(fileStream, cancellationToken);
+                }
             }
 
             string metaPath = path + ".meta.json";
-            var metaJson = System.Text.Json.JsonSerializer.Serialize(fileMeta);
+            List<SavedFileMetaJSON> metaList = new List<SavedFileMetaJSON>();
+            if (File.Exists(metaPath))
+            {
+                var existingJson = await File.ReadAllTextAsync(metaPath, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(existingJson))
+                {
+                    try
+                    {
+                        var existingList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(existingJson);
+                        if (existingList != null)
+                            metaList.AddRange(existingList);
+                    }
+                    catch { /* ignore corrupted data, continue */ }
+                }
+            }
+            metaList.Add(fileMeta);
+            var metaJson = JsonSerializer.Serialize(metaList);
             await File.WriteAllTextAsync(metaPath, metaJson, cancellationToken);
         }
 
