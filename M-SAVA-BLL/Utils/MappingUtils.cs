@@ -31,6 +31,53 @@ namespace M_SAVA_BLL.Utils
             return FileExtensionType.Unknown;
         }
 
+        public static UserDTO MapUserDTOWithRelationships(UserDB db)
+        {
+            if (db == null)
+                throw new ArgumentNullException(nameof(db));
+            if (db.AccessGroups == null)
+                throw new ArgumentException("AccessGroups cannot be null", nameof(db));
+
+            List<AccessGroupDTO> accessGroups = new List<AccessGroupDTO>();
+            foreach (AccessGroupDB accessGroup in db.AccessGroups)
+            {
+                accessGroups.Add(MapAccessGroupDTO(accessGroup));
+            }
+
+            UserDTO userDTO = MapUserDTO(db);
+            userDTO.AccessGroups = accessGroups;
+
+            return userDTO;
+        }
+
+        public static UserDTO MapUserDTO(UserDB db)
+        {
+            if (db == null)
+                throw new ArgumentNullException(nameof(db));
+            return new UserDTO
+            {
+                Id = db.Id,
+                Username = db.Username,
+                IsAdmin = db.IsAdmin,
+                IsBanned = db.IsBanned,
+                IsWhitelisted = db.IsWhitelisted,
+                CreatedAt = db.CreatedAt
+            };
+        }
+
+        public static AccessGroupDTO MapAccessGroupDTO(AccessGroupDB db)
+        {
+            if (db == null)
+                throw new ArgumentNullException(nameof(db));
+            return new AccessGroupDTO
+            {
+                Id = db.Id,
+                Name = db.Name,
+                CreatedAt = db.CreatedAt,
+                OwnerId = db.OwnerId
+            };
+        }
+
         public static SavedFileReferenceDB MapSavedFileReferenceDB(
             FileToSaveDTO dto,
             byte[] fileHash,

@@ -16,12 +16,6 @@ namespace M_SAVA_DAL.Contexts
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // User - AccessGroup many-to-many relationship
-            modelBuilder.Entity<UserDB>()
-                .HasMany(u => u.AccessGroups)
-                .WithMany(ag => ag.Users)
-                .UsingEntity(j => j.ToTable("UserAccessGroups"));
-
             // Owner - AccessGroup one-to-many relationship
             modelBuilder.Entity<AccessGroupDB>()
                 .HasOne(ag => ag.Owner)

@@ -22,10 +22,9 @@ namespace M_SAVA_API.Controllers
 
         [HttpPost("create")]
         public async Task<ActionResult<Guid>> CreateAccessGroup(
-            [FromQuery] string name,
-            [FromQuery] int maxUses)
+            [FromQuery] string name)
         {
-            var id = await _accessGroupService.CreateAccessGroupAsync(name, maxUses);
+            var id = await _accessGroupService.CreateAccessGroupAsync(name);
             return Ok(id);
         }
     }

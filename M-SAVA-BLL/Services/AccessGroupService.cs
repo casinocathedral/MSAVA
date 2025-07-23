@@ -31,9 +31,19 @@ namespace M_SAVA_BLL.Services
             _userRepository = userRepository;
         }
 
-        public async Task<Guid> CreateAccessGroupAsync(string name, int maxUses)
+        public async Task<List<AccessGroupDB>> GetUserAccessGroupsAsync(Guid userId)
         {
-            UserDB user = _userService.GetSessionUser();
+            UserDB user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User with ID {userId} not found.");
+            }
+            return user.AccessGroups?.ToList() ?? new List<AccessGroupDB>();
+        }
+
+        public async Task<Guid> CreateAccessGroupAsync(string name)
+        {
+            UserDB user = _userService.GetSessionUserDB();
             var now = DateTime.UtcNow;
 
             var accessGroup = new AccessGroupDB
@@ -59,24 +69,13 @@ namespace M_SAVA_BLL.Services
             {
                 accessGroup.Users = new List<UserDB>();
             }
+
             if (accessGroup.Users.Any(u => u.Id == user.Id))
             {
                 throw new InvalidOperationException($"User with ID {user.Id} is already in AccessGroup with ID {accessGroup.Id}.");
             }
-            accessGroup.Users.Add(user);
 
-            if (user.AccessGroups == null)
-            {
-                user.AccessGroups = new List<AccessGroupDB>();
-            }
-            if (user.AccessGroups.Any(ag => ag.Id == accessGroup.Id))
-            {
-                throw new InvalidOperationException($"AccessGroup with ID {accessGroup.Id} is already assigned to User with ID {user.Id}.");
-            }
             user.AccessGroups.Add(accessGroup);
-
-            _accessGroupRepository.Update(accessGroup);
-            await _accessGroupRepository.CommitAsync();
 
             _userRepository.Update(user);
             await _userRepository.CommitAsync();

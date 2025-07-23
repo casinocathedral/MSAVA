@@ -1,4 +1,5 @@
 ﻿using M_SAVA_BLL.Models;
+using M_SAVA_BLL.Utils;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -21,33 +22,56 @@ namespace M_SAVA_BLL.Services
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public UserDB GetUserById(Guid id)
+        public UserDTO GetUserById(Guid id)
         {
-            return _userRepository.GetById(id);
+            var userDb = _userRepository.GetById(id, u => u.AccessGroups);
+            return MappingUtils.MapUserDTOWithRelationships(userDb);
         }
 
-        public UserDB GetSessionUser()
+        public SessionDTO GetSessionClaims()
+        {
+            HttpContext httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
+            {
+                return sessionDto;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Session claims not found in HttpContext.");
+            }
+        }
+
+        public UserDTO GetSessionUser()
+        {
+            return MappingUtils.MapUserDTOWithRelationships(GetSessionUserDB());
+        }
+
+        public UserDB GetSessionUserDB()
         {
             HttpContext httpContext = _httpContextAccessor.HttpContext;
             Guid sessionUserId = new();
             if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
             {
                 sessionUserId = sessionDto.UserId;
-            } else
+            }
+            else
             {
                 throw new UnauthorizedAccessException("SessionDTO not found in HttpContext.");
             }
-            return _userRepository.GetById(sessionUserId);
+            var userDb = _userRepository.GetById(sessionUserId, u => u.AccessGroups);
+            return userDb;
         }
 
-        public async Task<UserDB> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<UserDTO> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return await _userRepository.GetByIdAsync(id, cancellationToken);
+            var userDb = await _userRepository.GetByIdAsync(id, u => u.AccessGroups);
+            return MappingUtils.MapUserDTOWithRelationships(userDb);
         }
 
-        public List<UserDB> GetAllUsers()
+        public List<UserDTO> GetAllUsers()
         {
-            return _userRepository.GetAllAsReadOnly().ToList();
+            var userDbs = _userRepository.GetAllAsReadOnly().ToList();
+            return userDbs.Select(MappingUtils.MapUserDTOWithRelationships).ToList();
         }
 
         public void DeleteUser(Guid id)

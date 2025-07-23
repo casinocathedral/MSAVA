@@ -1,4 +1,5 @@
-﻿using M_SAVA_DAL.Models;
+﻿using M_SAVA_BLL.Models;
+using M_SAVA_DAL.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,13 @@ namespace M_SAVA_BLL.Services
 {
     public interface IUserService
     {
-        UserDB GetUserById(Guid id);
-        Task<UserDB> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
-        List<UserDB> GetAllUsers();
+        UserDTO GetUserById(Guid id);
+        Task<UserDTO> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        List<UserDTO> GetAllUsers();
         void DeleteUser(Guid id);
         Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
-        UserDB GetSessionUser();
+        UserDTO GetSessionUser();
+        UserDB GetSessionUserDB();
+        SessionDTO GetSessionClaims();
     }
 }

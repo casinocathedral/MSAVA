@@ -23,7 +23,14 @@ namespace M_SAVA_API.Controllers
             return Ok(_userService.GetSessionUser());
         }
 
+        [HttpGet("claims")]
+        public IActionResult GetUserClaims()
+        {
+            return Ok(_userService.GetSessionClaims());
+        }
+
         [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
         public IActionResult GetAll()
         {            
             return Ok(_userService.GetAllUsers());

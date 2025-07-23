@@ -38,6 +38,7 @@ namespace M_SAVA_BLL.Services
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             UserDB? user = await _userRepository.GetAllAsReadOnly()
+                .Include(u => u.AccessGroups)
                 .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
             if (user == null || !PasswordUtils.VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
                 throw new InvalidOperationException("Username doesn't exist or password is incorrect.");
