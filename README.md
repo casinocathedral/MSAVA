@@ -1,5 +1,5 @@
 # MSAVA
-A .NET-based modular backend system designed to manage secure or public access to static assets such as documents or files. 
+A .NET-based modular backend system designed to manage secure or public access to static assets such as documents or image files. 
 
 # Key features
 * Swagger/OpenAPI Support: View all available endpoints, parameters, and expected responses directly from your browser.
