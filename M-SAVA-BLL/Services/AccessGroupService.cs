@@ -1,4 +1,5 @@
-﻿using M_SAVA_DAL.Models;
+﻿using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -81,11 +82,6 @@ namespace M_SAVA_BLL.Services
             await _userRepository.CommitAsync();
         }
 
-        private bool IsUserOwnerOrAdmin(UserDB user, AccessGroupDB group)
-        {
-            return user.IsAdmin || group.OwnerId == user.Id;
-        }
-
         public async Task AddAccessGroupToUserAsync(Guid accessGroupId, Guid userId)
         {
             AccessGroupDB accessGroup = await _accessGroupRepository.GetByIdAsync(accessGroupId);
@@ -98,7 +94,7 @@ namespace M_SAVA_BLL.Services
             {
                 throw new KeyNotFoundException($"User with ID {userId} not found.");
             }
-            if (!IsUserOwnerOrAdmin(_userService.GetSessionUserDB(), accessGroup))
+            if (!IsSessionUserAdminOrOwnerOfAccessGroup(accessGroup))
             {
                 throw new UnauthorizedAccessException("Only the owner or an admin can add users to this access group.");
             }
@@ -112,6 +108,19 @@ namespace M_SAVA_BLL.Services
             }
             
             await AddAccessGroupDbToUserDbAsync(accessGroup, user);
+        }
+
+        private bool IsSessionUserAdminOrOwnerOfAccessGroup(AccessGroupDB accessGroup)
+        {
+            bool isAdmin = _userService.IsSessionUserAdmin();
+            bool isOwner = IsSessionUserOwnerOfAccessGroup(accessGroup);
+            return isAdmin || isOwner;
+        }
+
+        private bool IsSessionUserOwnerOfAccessGroup(AccessGroupDB accessGroup)
+        {
+            Guid userId = _userService.GetSessionUserId();
+            return userId == accessGroup.OwnerId;
         }
     }
 }

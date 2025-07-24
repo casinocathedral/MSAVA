@@ -1,4 +1,4 @@
-﻿using M_SAVA_BLL.Models;
+﻿using M_SAVA_Core.Models;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Utils;
 using M_SAVA_INF.Models;

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using M_SAVA_BLL.Models;
-using M_SAVA_BLL.Services;
+using M_SAVA_Core.Models;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_API.Controllers
 {

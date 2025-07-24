@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace M_SAVA_BLL.Models
+namespace M_SAVA_Core.Models
 {
     public class HeadersDTO
     {

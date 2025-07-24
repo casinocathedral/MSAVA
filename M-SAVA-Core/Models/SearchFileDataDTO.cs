@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace M_SAVA_BLL.Models
+namespace M_SAVA_Core.Models
 {
     public class SearchFileDataDTO
     {

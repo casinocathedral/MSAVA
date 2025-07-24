@@ -1,4 +1,4 @@
-﻿using M_SAVA_BLL.Models;
+﻿using M_SAVA_Core.Models;
 using M_SAVA_DAL.Models;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace M_SAVA_BLL.Services
+namespace M_SAVA_BLL.Services.Interfaces
 {
     public interface IUserService
     {
@@ -15,7 +15,9 @@ namespace M_SAVA_BLL.Services
         List<UserDTO> GetAllUsers();
         void DeleteUser(Guid id);
         Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default);
+        bool IsSessionUserAdmin();
         UserDTO GetSessionUser();
+        Guid GetSessionUserId();
         UserDB GetSessionUserDB();
         SessionDTO GetSessionClaims();
     }

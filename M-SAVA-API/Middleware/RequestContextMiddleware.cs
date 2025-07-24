@@ -1,4 +1,4 @@
-﻿using M_SAVA_BLL.Models;
+﻿using M_SAVA_Core.Models;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;

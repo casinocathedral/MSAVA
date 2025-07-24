@@ -2,6 +2,7 @@
 using M_SAVA_API.Handlers;
 using M_SAVA_API.Middleware;
 using M_SAVA_BLL.Services;
+using M_SAVA_BLL.Services.Interfaces;
 using M_SAVA_DAL.Contexts;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
@@ -18,10 +19,9 @@ using System.Text.Json;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Register controllers
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<IAuthorizationHandler, NotBannedHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
@@ -36,7 +36,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "M-SAVA-API", Version = "v1" });
 
-    // Add JWT Bearer Authorization to Swagger (lock button)
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -80,9 +79,11 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ISearchFileService, SearchFileService>();
 builder.Services.AddScoped<ISeedingService, SeedingService>();
 builder.Services.AddScoped<AccessGroupService>();
+builder.Services.AddScoped<InviteCodeService>();
 
 // Register singletons
 builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
+builder.Services.AddSingleton<IAuthorizationHandler, NotBannedHandler>();
 
 // Register repositories
 builder.Services.AddScoped<IIdentifiableRepository<UserDB>, IdentifiableRepository<UserDB>>();

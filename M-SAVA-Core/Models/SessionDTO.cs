@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 
-namespace M_SAVA_BLL.Models
+namespace M_SAVA_Core.Models
 {
     public class SessionDTO
     {

@@ -1,4 +1,4 @@
-﻿using M_SAVA_BLL.Models;
+﻿using M_SAVA_Core.Models;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using M_SAVA_INF.Environment;
 using M_SAVA_BLL.Utils;
 using Microsoft.Extensions.Configuration;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_BLL.Services
 {
@@ -19,12 +20,14 @@ namespace M_SAVA_BLL.Services
     {
         private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly IIdentifiableRepository<JwtDB> _jwtRepository;
+        private readonly InviteCodeService _inviteCodeService;
         private readonly string _jwtIssuer;
         private readonly byte[] _jwtKeyBytes;
 
         public LoginService(
             IIdentifiableRepository<UserDB> userRepository,
             IIdentifiableRepository<JwtDB> jwtRepository,
+            InviteCodeService inviteCodeService,
             IConfiguration configuration,
             ILocalEnvironment env)
         {
@@ -32,6 +35,7 @@ namespace M_SAVA_BLL.Services
             _jwtRepository = jwtRepository ?? throw new ArgumentNullException(nameof(jwtRepository));
             _jwtIssuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer configuration is missing.");
             _jwtKeyBytes = env.GetSigningKeyBytes();
+            _inviteCodeService = inviteCodeService ?? throw new ArgumentNullException(nameof(inviteCodeService));
         }
 
         public async Task<LoginResponseDTO> LoginAsync(LoginRequestDTO request, CancellationToken cancellationToken = default)
@@ -105,6 +109,11 @@ namespace M_SAVA_BLL.Services
         public async Task<Guid> RegisterAsync(RegisterRequestDTO request, CancellationToken cancellationToken = default)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
+
+            bool isValidInviteCode = await _inviteCodeService.IsValidInviteCode(request.InviteCode);
+            if (!isValidInviteCode)
+                throw new InvalidOperationException("Invalid or expired invite code.");
+
             bool exists = await _userRepository.GetAllAsReadOnly()
                 .AnyAsync(u => u.Username == request.Username, cancellationToken);
             if (exists)
@@ -122,6 +131,10 @@ namespace M_SAVA_BLL.Services
                 Username = request.Username,
                 PasswordHash = hash,
                 PasswordSalt = salt,
+                IsAdmin = false,
+                IsBanned = false,
+                IsWhitelisted = false,
+                InviteCode = request.InviteCode,
             };
 
             _userRepository.Insert(user);

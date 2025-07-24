@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using M_SAVA_BLL.Models;
+using M_SAVA_Core.Models;
 using M_SAVA_BLL.Utils;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
@@ -16,6 +16,7 @@ using M_SAVA_DAL.Utils;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using M_SAVA_INF.Models;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_BLL.Services
 {

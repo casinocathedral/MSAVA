@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace M_SAVA_BLL.Models
+namespace M_SAVA_Core.Models
 {
     public class FileToSaveDTO
     {

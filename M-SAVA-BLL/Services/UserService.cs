@@ -1,4 +1,4 @@
-﻿using M_SAVA_BLL.Models;
+﻿using M_SAVA_Core.Models;
 using M_SAVA_BLL.Utils;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_BLL.Services
 {
@@ -28,6 +29,18 @@ namespace M_SAVA_BLL.Services
             return MappingUtils.MapUserDTOWithRelationships(userDb);
         }
 
+        public Guid GetSessionUserId()
+        {
+            HttpContext httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
+            {
+                return sessionDto.UserId;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("SessionDTO not found in HttpContext.");
+            }
+        }
         public SessionDTO GetSessionClaims()
         {
             HttpContext httpContext = _httpContextAccessor.HttpContext;
@@ -38,6 +51,19 @@ namespace M_SAVA_BLL.Services
             else
             {
                 throw new UnauthorizedAccessException("Session claims not found in HttpContext.");
+            }
+        }
+
+        public bool IsSessionUserAdmin()
+        {
+            HttpContext httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)
+            {
+                return sessionDto.IsAdmin;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("SessionDTO not found in HttpContext.");
             }
         }
 

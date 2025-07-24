@@ -1,11 +1,11 @@
-﻿using M_SAVA_BLL.Models;
-using M_SAVA_BLL.Services;
+﻿using M_SAVA_Core.Models;
 using M_SAVA_DAL.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_API.Controllers
 {

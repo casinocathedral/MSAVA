@@ -7,7 +7,7 @@ using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using System.IO;
 using System.Threading;
-using M_SAVA_BLL.Models;
+using M_SAVA_Core.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Cryptography;
 using M_SAVA_BLL.Utils;
@@ -15,6 +15,7 @@ using System.Text.Json;
 using M_SAVA_INF.Managers;
 using M_SAVA_INF.Utils;
 using M_SAVA_INF.Models;
+using M_SAVA_BLL.Services.Interfaces;
 
 namespace M_SAVA_BLL.Services
 {
