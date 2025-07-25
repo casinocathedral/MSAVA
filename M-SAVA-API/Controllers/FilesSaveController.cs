@@ -52,7 +52,7 @@ namespace M_SAVA_API.Controllers
                 Stream = Request.Body
             };
 
-            Guid id = await _saveFileService.CreateFileAsync(dto, cancellationToken);
+            Guid id = await _saveFileService.CreateFileFromStreamAsync(dto, cancellationToken);
             return Ok(id);
         }
     }

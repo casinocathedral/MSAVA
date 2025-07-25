@@ -3,6 +3,7 @@ using System;
 using System.Threading.Tasks;
 using M_SAVA_Core.Models;
 using M_SAVA_BLL.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace M_SAVA_API.Controllers
 {
@@ -17,17 +18,15 @@ namespace M_SAVA_API.Controllers
             _loginService = loginService;
         }
 
-        // LOGIN
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
+        public async Task<IActionResult> Login([FromBody][Required] LoginRequestDTO request)
         {
             var result = await _loginService.LoginAsync(request);
             return Ok(result);
         }
 
-        // REGISTER
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
+        public async Task<IActionResult> Register([FromBody][Required] RegisterRequestDTO request)
         {
             var success = await _loginService.RegisterAsync(request);
             return Ok("User registered!");

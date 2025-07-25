@@ -1,11 +1,53 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using M_SAVA_BLL.Services;
+using System;
+using System.Threading.Tasks;
 
 namespace M_SAVA_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class InviteCodeController : ControllerBase
     {
+        private readonly InviteCodeService _inviteCodeService;
+
+        public InviteCodeController(InviteCodeService inviteCodeService)
+        {
+            _inviteCodeService = inviteCodeService ?? throw new ArgumentNullException(nameof(inviteCodeService));
+        }
+
+        [HttpGet("remaining-uses/{inviteCodeId:guid}")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<int> GetRemainingUses(Guid inviteCodeId)
+        {
+            return Ok(_inviteCodeService.GetHowManyUses(inviteCodeId));
+        }
+
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<Guid>> CreateInviteCode([FromQuery] int maxUses, [FromQuery] DateTime expiresAt)
+        {
+            var id = await _inviteCodeService.CreateNewInviteCode(maxUses, expiresAt);
+            return Ok(id);
+        }
+
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult GetAllInviteCodes()
+        {
+            return Ok(_inviteCodeService.GetAllInviteCodes());
+        }
+
+        [HttpGet("{inviteCodeId:guid}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetInviteCodeById(Guid inviteCodeId)
+        {
+            var code = await _inviteCodeService.GetInviteCodeById(inviteCodeId);
+            if (code == null)
+                return NotFound();
+            return Ok(code);
+        }
     }
 }

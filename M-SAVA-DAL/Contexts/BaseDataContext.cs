@@ -22,6 +22,20 @@ namespace M_SAVA_DAL.Contexts
                 .WithMany()
                 .HasForeignKey(ag => ag.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // User - InviteCode many-to-one relationship
+            modelBuilder.Entity<UserDB>()
+                .HasOne(u => u.InviteCode)
+                .WithMany()
+                .HasForeignKey(u => u.InviteCodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InviteCode - Owner one-to-many relationship
+            modelBuilder.Entity<InviteCodeDB>()
+                .HasOne(ic => ic.Owner)
+                .WithMany()
+                .HasForeignKey(ic => ic.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         // User entities

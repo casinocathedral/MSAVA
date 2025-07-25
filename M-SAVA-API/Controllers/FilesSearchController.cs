@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using M_SAVA_BLL.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace M_SAVA_API.Controllers
 {
@@ -28,25 +29,25 @@ namespace M_SAVA_API.Controllers
         }
 
         [HttpGet("byTag/id")]
-        public ActionResult<List<Guid>> SearchFileGuidsByTag([FromQuery] string tag)
+        public ActionResult<List<Guid>> SearchFileGuidsByTag([FromQuery][Required] string tag)
         {
             return Ok(_searchFileService.GetFileGuidsByTag(tag));
         }
 
         [HttpGet("byCategory/id")]
-        public ActionResult<List<Guid>> SearchFileGuidsByCategory([FromQuery] string category)
+        public ActionResult<List<Guid>> SearchFileGuidsByCategory([FromQuery][Required] string category)
         {
             return Ok(_searchFileService.GetFileGuidsByCategory(category));
         }
 
         [HttpGet("byName/id")]
-        public ActionResult<List<Guid>> SearchFileGuidsByName([FromQuery] string name)
+        public ActionResult<List<Guid>> SearchFileGuidsByName([FromQuery][Required] string name)
         {
             return Ok(_searchFileService.GetFileGuidsByName(name));
         }
 
         [HttpGet("byDescription/id")]
-        public ActionResult<List<Guid>> SearchFileGuidsByDescription([FromQuery] string description)
+        public ActionResult<List<Guid>> SearchFileGuidsByDescription([FromQuery][Required] string description)
         {
             return Ok(_searchFileService.GetFileGuidsByDescription(description));
         }
@@ -58,25 +59,25 @@ namespace M_SAVA_API.Controllers
         }
 
         [HttpGet("byTag/data")]
-        public ActionResult<List<SearchFileDataDTO>> SearchFilesByTag([FromQuery] string tag)
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByTag([FromQuery][Required] string tag)
         {
             return Ok(_searchFileService.GetFileDataByTag(tag));
         }
 
         [HttpGet("byCategory/data")]
-        public ActionResult<List<SearchFileDataDTO>> SearchFilesByCategory([FromQuery] string category)
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByCategory([FromQuery][Required] string category)
         {
             return Ok(_searchFileService.GetFileDataByCategory(category));
         }
 
         [HttpGet("byName/data")]
-        public ActionResult<List<SearchFileDataDTO>> SearchFilesByName([FromQuery] string name)
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByName([FromQuery][Required] string name)
         {
             return Ok(_searchFileService.GetFileDataByName(name));
         }
 
         [HttpGet("byDescription/data")]
-        public ActionResult<List<SearchFileDataDTO>> SearchFilesByDescription([FromQuery] string description)
+        public ActionResult<List<SearchFileDataDTO>> SearchFilesByDescription([FromQuery][Required] string description)
         {
             return Ok(_searchFileService.GetFileDataByDescription(description));
         }

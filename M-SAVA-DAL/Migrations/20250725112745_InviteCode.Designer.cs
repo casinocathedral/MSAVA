@@ -4,6 +4,7 @@ using System.Text.Json;
 using M_SAVA_DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace M_SAVA_DAL.Migrations
 {
     [DbContext(typeof(BaseDataContext))]
-    partial class BaseDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250725112745_InviteCode")]
+    partial class InviteCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -294,7 +297,7 @@ namespace M_SAVA_DAL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("InviteCodeId")
+                    b.Property<Guid>("InviteCodeId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsAdmin")
@@ -440,7 +443,8 @@ namespace M_SAVA_DAL.Migrations
                     b.HasOne("M_SAVA_DAL.Models.InviteCodeDB", "InviteCode")
                         .WithMany()
                         .HasForeignKey("InviteCodeId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("InviteCode");
                 });

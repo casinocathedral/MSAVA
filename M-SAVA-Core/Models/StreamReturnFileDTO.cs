@@ -9,7 +9,7 @@ namespace M_SAVA_Core.Models
 {
     public class StreamReturnFileDTO
     {
-        public required Guid Id { get; set; }
+        public Guid Id { get; set; }
         public required string FileName { get; set; }
         public required string FileExtension { get; set; }
         public required FileStreamResult FileStream { get; set; }

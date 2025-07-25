@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace M_SAVA_API.Controllers
@@ -21,8 +22,8 @@ namespace M_SAVA_API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<ActionResult<Guid>> CreateAccessGroup(
-            [FromQuery] string name)
+        public async Task<ActionResult> CreateAccessGroup(
+            [FromQuery][Required] string name)
         {
             var id = await _accessGroupService.CreateAccessGroupAsync(name);
             return Ok(id);
@@ -30,8 +31,8 @@ namespace M_SAVA_API.Controllers
 
         [HttpPost("adduser")]
         public async Task<ActionResult> AddUserToAccessGroup(
-            [FromQuery] Guid userId,
-            [FromQuery] Guid accessGroupId)
+            [FromQuery][Required] Guid userId,
+            [FromQuery][Required] Guid accessGroupId)
         {
             try
             {

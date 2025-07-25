@@ -70,7 +70,7 @@ namespace M_SAVA_BLL.Services
                 claims.Add(new Claim(ClaimTypes.Role, "Banned"));
             if (user.IsWhitelisted)
                 claims.Add(new Claim(ClaimTypes.Role, "Whitelisted"));
-            claims.Add(new Claim("inviteCode", user.InviteCode.ToString()));
+            claims.Add(new Claim("inviteCode", user.InviteCodeId.ToString()));
 
             List<Guid> accessGroupGuids = user.AccessGroups?.Select(g => g.Id).ToList() ?? new List<Guid>();
             claims.Add(new Claim("accessGroups", string.Join(",", accessGroupGuids)));
@@ -134,7 +134,7 @@ namespace M_SAVA_BLL.Services
                 IsAdmin = false,
                 IsBanned = false,
                 IsWhitelisted = false,
-                InviteCode = request.InviteCode,
+                InviteCodeId = request.InviteCode,
             };
 
             _userRepository.Insert(user);

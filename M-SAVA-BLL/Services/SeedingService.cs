@@ -63,7 +63,6 @@ namespace M_SAVA_BLL.Services
                     IsAdmin = true,
                     IsBanned = false,
                     IsWhitelisted = true,
-                    InviteCode = inviteCodeId,
                     CreatedAt = DateTime.UtcNow
                 };
                 _userRepo.Insert(adminUser);

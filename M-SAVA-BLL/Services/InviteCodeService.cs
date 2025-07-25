@@ -43,7 +43,7 @@ namespace M_SAVA_BLL.Services
 
         public int GetHowManyUses(Guid inviteCode)
         {
-            int usedCount = _userRepository.GetAllAsReadOnly().Count(u => u.InviteCode == inviteCode);
+            int usedCount = _userRepository.GetAllAsReadOnly().Count(u => u.InviteCodeId == inviteCode);
             return usedCount;
         }
 
@@ -61,6 +61,16 @@ namespace M_SAVA_BLL.Services
             int usedCount = GetHowManyUses(inviteCodeId);
             int remainingUses = inviteCode.MaxUses - usedCount;
             return remainingUses > 0;
+        }
+
+        public List<InviteCodeDB> GetAllInviteCodes()
+        {
+            return _inviteCodeRepository.GetAllAsReadOnly().ToList();
+        }
+
+        public async Task<InviteCodeDB?> GetInviteCodeById(Guid inviteCodeId)
+        {
+            return await _inviteCodeRepository.GetByIdAsync(inviteCodeId);
         }
     }
 }

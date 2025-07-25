@@ -1,30 +1,21 @@
 ﻿using M_SAVA_INF.Models;
 using M_SAVA_INF.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Metadata;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
 
 namespace M_SAVA_INF.Managers
 {
     public class FileManager
     {
-        public string fileRootPath { get; } = Path.Combine(AppContext.BaseDirectory, "Data");
         public FileManager()
         {
-            if (!Directory.Exists(fileRootPath))
-            {
-                Directory.CreateDirectory(fileRootPath);
-            }
-        }
-
-        public string GetFileRootPath()
-        {
-            return fileRootPath;
         }
 
         public async Task SaveFileContentAsync(SavedFileMetaJSON fileMeta, byte[] fileHash, string fileExtension, Stream contentStream, CancellationToken cancellationToken = default, bool overwrite = false)
@@ -49,7 +40,7 @@ namespace M_SAVA_INF.Managers
             if (contentStream.CanSeek)
                 contentStream.Position = 0;
 
-            string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
+            string path = FileContentUtils.GetFullPath(fileHash, fileExtension);
             bool fileExists = File.Exists(path);
             if (overwrite || !fileExists)
             {
@@ -80,20 +71,35 @@ namespace M_SAVA_INF.Managers
             await File.WriteAllTextAsync(metaPath, metaJson, cancellationToken);
         }
 
-        public FileStream? GetFileStream(byte[] fileHash, string fileExtension, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read)
+        public FileStream GetFileStream(string fileNameWithExtension)
         {
-            string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
-            if (!File.Exists(path))
-                return null;
-            return new FileStream(path, mode, access, FileShare.Read, 81920, useAsync: true);
+            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"File not found: {fullPath}");
+
+            FileStreamOptions options = FileStreamUtils.GetDefaultFileStreamOptions();
+            return GetFileStream(fullPath, options);
+        }
+        public FileStream GetFileStream(byte[] fileHash, string fileExtension)
+        {
+            string fullPath = FileContentUtils.GetFullPath(fileHash, fileExtension);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"File not found: {fullPath}");
+
+            FileStreamOptions options = FileStreamUtils.GetDefaultFileStreamOptions();
+            return GetFileStream(fullPath, options);
+        }
+        public FileStream GetFileStream(string fullPath, FileStreamOptions options)
+        {
+            return new FileStream(fullPath, options);
         }
 
-        public PhysicalFileResult GetPhysicalFile(string filePath, string contentType)
+        public PhysicalFileResult GetPhysicalFile(string fileNameWithExtension, string contentType)
         {
-            string fullPath = Path.GetFullPath(Path.Combine(fileRootPath, filePath));
+            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
 
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException($"File not found: {filePath}", fullPath);
+                throw new FileNotFoundException($"File not found: {fullPath}");
 
             var fileName = Path.GetFileName(fullPath);
             return new PhysicalFileResult(fullPath, contentType)
@@ -105,21 +111,23 @@ namespace M_SAVA_INF.Managers
 
         public bool FileExists(byte[] fileHash, string fileExtension)
         {
-            string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
+            string path = FileContentUtils.GetFullPath(fileHash, fileExtension);
             return File.Exists(path);
         }
 
         public void DeleteFileContent(byte[] fileHash, string fileExtension)
         {
-            string path = FileContentUtils.GetFilePath(fileHash, fileExtension);
+            string path = FileContentUtils.GetFullPath(fileHash, fileExtension);
             if (File.Exists(path))
             {
                 File.Delete(path);
             }
         }
 
-        public bool CheckFileAccessByPath(string fullPath, List<Guid> userAccessGroups)
+        public bool CheckFileAccessByPath(string fileNameWithExtension, List<Guid> userAccessGroups)
         {
+            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
+
             if (!File.Exists(fullPath))
             {
                 throw new FileNotFoundException($"The file '{fullPath}' does not exist.");

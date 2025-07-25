@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using M_SAVA_BLL.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace M_SAVA_API.Controllers
 {
@@ -27,6 +28,20 @@ namespace M_SAVA_API.Controllers
         public IActionResult GetFileStreamById(Guid refId)
         {
             return _returnFileService.GetFileStreamById(refId).FileStream;
+        }
+
+        [HttpGet("stream/{**fileNameWithExtension}")]
+        public IActionResult GetFileStreamByPath(string fileNameWithExtension)
+        {
+            return _returnFileService.GetFileStreamByPath(fileNameWithExtension).FileStream;
+        }
+
+        [HttpGet("physical/{refId:guid}")]
+        public IActionResult GetPhysicalFileReturnDataById(Guid refId)
+        {
+            PhysicalReturnFileDTO fileData = _returnFileService.GetPhysicalFileReturnDataById(refId);
+
+            return PhysicalFile(fileData.FilePath, fileData.ContentType, fileData.FileName, enableRangeProcessing: true);
         }
 
         [HttpGet("physical/{**fileNameWithExtension}")]

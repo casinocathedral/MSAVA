@@ -16,7 +16,8 @@ namespace M_SAVA_DAL.Models
         public required bool IsAdmin { get; set; }
         public required bool IsBanned { get; set; }
         public required bool IsWhitelisted { get; set; }
-        public required Guid InviteCode { get; set; }
+        public Guid? InviteCodeId { get; set; }
+        public InviteCodeDB? InviteCode { get; set; }
         public ICollection<AccessGroupDB> AccessGroups { get; set; } = new List<AccessGroupDB>();
     }
 }

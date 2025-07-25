@@ -14,13 +14,16 @@ namespace M_SAVA_INF.Utils
 
         public static readonly string FilesDirectory =
             Path.Combine(AppContext.BaseDirectory, "Data");
-        public static string GetFilePath(byte[] fileHash, string fileExtension)
+        public static string GetFullPath(byte[] fileHash, string fileExtension)
         {
             string hashString = BitConverter.ToString(fileHash).Replace("-", "").ToLowerInvariant();
             string extension = fileExtension.ToString().TrimStart('_').ToLowerInvariant();
             return Path.Combine(FilesDirectory, $"{hashString}.{extension}");
         }
-
+        public static string GetFullPath(string fileNameWithExtension)
+        {
+            return Path.Combine(FilesDirectory, fileNameWithExtension);
+        }
         public static bool ValidateFileContent(Stream contentStream, string extension)
         {
             if (contentStream is FileStream fileStream)

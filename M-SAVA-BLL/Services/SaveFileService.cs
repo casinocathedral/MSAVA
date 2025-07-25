@@ -39,7 +39,7 @@ namespace M_SAVA_BLL.Services
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor), "Service: httpContextAccessor cannot be null.");
         }
 
-        public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
+        public async Task<Guid> CreateFileFromStreamAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
