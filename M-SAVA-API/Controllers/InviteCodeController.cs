@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using M_SAVA_BLL.Services;
 using System;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace M_SAVA_API.Controllers
 {
@@ -22,14 +23,17 @@ namespace M_SAVA_API.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult<int> GetRemainingUses(Guid inviteCodeId)
         {
-            return Ok(_inviteCodeService.GetHowManyUses(inviteCodeId));
+            return Ok(_inviteCodeService.GetRemainingUses(inviteCodeId));
         }
 
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Guid>> CreateInviteCode([FromQuery] int maxUses, [FromQuery] DateTime expiresAt)
+        public async Task<ActionResult<Guid>> CreateInviteCode(
+            [FromQuery][Required] int maxUses, 
+            [FromQuery][Required] int expiresInHours)
         {
-            var id = await _inviteCodeService.CreateNewInviteCode(maxUses, expiresAt);
+            DateTime expiresAt = DateTime.UtcNow.AddHours(expiresInHours);
+            Guid id = await _inviteCodeService.CreateNewInviteCode(maxUses, expiresAt);
             return Ok(id);
         }
 

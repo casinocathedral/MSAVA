@@ -110,7 +110,7 @@ namespace M_SAVA_BLL.Services
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            bool isValidInviteCode = await _inviteCodeService.IsValidInviteCode(request.InviteCode);
+            bool isValidInviteCode = _inviteCodeService.IsValidInviteCode(request.InviteCode);
             if (!isValidInviteCode)
                 throw new InvalidOperationException("Invalid or expired invite code.");
 

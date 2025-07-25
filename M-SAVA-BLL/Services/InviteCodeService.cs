@@ -47,19 +47,16 @@ namespace M_SAVA_BLL.Services
             return usedCount;
         }
 
-        public async Task<bool> IsValidInviteCode(Guid inviteCodeId)
+        public int GetRemainingUses(Guid inviteCode)
         {
-            InviteCodeDB inviteCode = await _inviteCodeRepository.GetByIdAsync(inviteCodeId);
-            if (inviteCode == null)
-            {
-                return false;
-            }
-            if (inviteCode.ExpiresAt < DateTime.UtcNow)
-            {
-                return false;
-            }
-            int usedCount = GetHowManyUses(inviteCodeId);
-            int remainingUses = inviteCode.MaxUses - usedCount;
+            int usedCount = GetHowManyUses(inviteCode);
+            InviteCodeDB inviteCodeDB = _inviteCodeRepository.GetById(inviteCode);
+            return inviteCodeDB.MaxUses - usedCount;
+        }
+
+        public bool IsValidInviteCode(Guid inviteCodeId)
+        {
+            int remainingUses = GetRemainingUses(inviteCodeId);
             return remainingUses > 0;
         }
 
