@@ -133,21 +133,18 @@ namespace M_SAVA_INF.Managers
             }
 
             var metaJson = File.ReadAllText(metaPath);
-            var meta = JsonSerializer.Deserialize<SavedFileMetaJSON>(metaJson);
+            var metaList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(metaJson);
 
-            if (meta == null)
+            if (metaList == null || metaList.Count == 0)
             {
-                throw new FileNotFoundException($"Meta file '{metaPath}' is invalid.");
+                throw new FileNotFoundException($"Meta file '{metaPath}' is invalid or empty.");
             }
-            if (meta.PublicDownload)
-            {
-                return true;
-            }
-            if (userAccessGroups == null || !userAccessGroups.Contains(meta.AccessGroupId))
+
+            bool hasAccess = metaList.Any(meta => meta.PublicDownload || (userAccessGroups != null && userAccessGroups.Contains(meta.AccessGroupId)));
+            if (!hasAccess)
             {
                 throw new UnauthorizedAccessException("User does not have access to this file's access group.");
             }
-
             return true;
         }
     }

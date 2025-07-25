@@ -41,6 +41,23 @@ namespace M_SAVA_BLL.Services
 
         public async Task<Guid> CreateFileAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
         {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+            if (string.IsNullOrWhiteSpace(dto.FileName))
+                throw new ArgumentException("FileName must be provided in the DTO.", nameof(dto));
+            if (string.IsNullOrWhiteSpace(dto.FileExtension))
+                throw new ArgumentException("FileExtension must be provided in the DTO.", nameof(dto));
+            if (dto.Stream == null)
+                throw new ArgumentException("Stream must be provided in the DTO.", nameof(dto));
+            if (dto.AccessGroupId == Guid.Empty)
+                throw new ArgumentException("AccessGroupId must be provided in the DTO.", nameof(dto));
+            if (dto.Tags == null)
+                dto.Tags = new List<string>();
+            if (dto.Categories == null)
+                dto.Categories = new List<string>();
+            if (dto.Description == null)
+                dto.Description = string.Empty;
+
             Guid sessionUserId = Guid.Empty;
             HttpContext httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null && httpContext.Items["SessionDTO"] is SessionDTO sessionDto)

@@ -10,6 +10,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using M_SAVA_BLL.Services.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace M_SAVA_API.Controllers
 {
@@ -28,14 +29,14 @@ namespace M_SAVA_API.Controllers
         [HttpPost("stream")]
         [Consumes("application/octet-stream")]
         public async Task<ActionResult<Guid>> CreateFile(
-            [FromQuery] string fileName,
-            [FromQuery] string fileExtension,
-            [FromQuery] List<string>? tags,
-            [FromQuery] List<string>? categories,
-            [FromQuery] Guid accessGroup,
-            [FromQuery] string? description,
-            [FromQuery] bool publicViewing = false,
-            [FromQuery] bool publicDownload = false,
+            [FromQuery] [Required] string fileName,
+            [FromQuery] [Required] string fileExtension,
+            [FromQuery] [Required] List<string> tags,
+            [FromQuery] [Required] List<string> categories,
+            [FromQuery] [Required] Guid accessGroup,
+            [FromQuery] [Required] string description,
+            [FromQuery] [Required] bool publicViewing,
+            [FromQuery] [Required] bool publicDownload,
             CancellationToken cancellationToken = default)
         {
             FileToSaveDTO dto = new FileToSaveDTO
