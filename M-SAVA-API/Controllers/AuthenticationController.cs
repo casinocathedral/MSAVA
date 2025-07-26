@@ -28,8 +28,8 @@ namespace M_SAVA_API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody][Required] RegisterRequestDTO request)
         {
-            var success = await _loginService.RegisterAsync(request);
-            return Ok("User registered!");
+            var result = await _loginService.RegisterAsync(request);
+            return Ok(result);
         }
     }
 }
