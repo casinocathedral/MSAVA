@@ -54,12 +54,12 @@ namespace M_SAVA_INF.Managers
             List<SavedFileMetaJSON> metaList = new List<SavedFileMetaJSON>();
             if (File.Exists(metaPath))
             {
-                var existingJson = await File.ReadAllTextAsync(metaPath, cancellationToken);
+                string existingJson = await File.ReadAllTextAsync(metaPath, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(existingJson))
                 {
                     try
                     {
-                        var existingList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(existingJson);
+                        List<SavedFileMetaJSON> existingList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(existingJson);
                         if (existingList != null)
                             metaList.AddRange(existingList);
                     }
@@ -67,19 +67,13 @@ namespace M_SAVA_INF.Managers
                 }
             }
             metaList.Add(fileMeta);
-            var metaJson = JsonSerializer.Serialize(metaList);
+            string metaJson = JsonSerializer.Serialize(metaList);
             await File.WriteAllTextAsync(metaPath, metaJson, cancellationToken);
         }
 
         public FileStream GetFileStream(string fileNameWithExtension)
         {
-            if(FileContentUtils.IsSafeFileName(fileNameWithExtension) == false)
-                throw new UnauthorizedAccessException($"Unsafe file name: {fileNameWithExtension}");
-            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
-            if(FileContentUtils.IsSafeFilePath(fullPath) == false)
-                throw new UnauthorizedAccessException($"Unsafe file path: {fullPath}");
-            if (!File.Exists(fullPath))
-                throw new FileNotFoundException($"File not found: {fullPath}");
+            string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
 
             FileStreamOptions options = FileStreamUtils.GetDefaultFileStreamOptions();
             return GetFileStream(fullPath, options);
@@ -105,7 +99,7 @@ namespace M_SAVA_INF.Managers
             if (!File.Exists(fullPath))
                 throw new FileNotFoundException($"File not found: {fullPath}");
 
-            var fileName = Path.GetFileName(fullPath);
+            string fileName = Path.GetFileName(fullPath);
             return new PhysicalFileResult(fullPath, contentType)
             {
                 FileDownloadName = fileName,
@@ -130,7 +124,7 @@ namespace M_SAVA_INF.Managers
 
         public bool CheckFileAccessByPath(string fileNameWithExtension, List<Guid> userAccessGroups)
         {
-            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
+            string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
 
             if (!File.Exists(fullPath))
             {
@@ -144,8 +138,8 @@ namespace M_SAVA_INF.Managers
                 throw new UnauthorizedAccessException($"Meta file '{metaPath}' does not exist.");
             }
 
-            var metaJson = File.ReadAllText(metaPath);
-            var metaList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(metaJson);
+            string metaJson = File.ReadAllText(metaPath);
+            List<SavedFileMetaJSON> metaList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(metaJson);
 
             if (metaList == null || metaList.Count == 0)
             {

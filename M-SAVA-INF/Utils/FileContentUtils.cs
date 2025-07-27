@@ -41,6 +41,20 @@ namespace M_SAVA_INF.Utils
                 fileNameWithExtension.Contains("\\");
         }
 
+        public static string GetFullPathIfSafe(string fileNameWithExtension)
+        {
+            if (FileContentUtils.IsSafeFileName(fileNameWithExtension) == false)
+                throw new UnauthorizedAccessException($"Unsafe file name: {fileNameWithExtension}");
+            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
+
+            if (FileContentUtils.IsSafeFilePath(fullPath) == false)
+                throw new UnauthorizedAccessException($"Unsafe file path: {fullPath}");
+
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"File not found: {fullPath}");
+            return fullPath;
+        }
+
         public static string GetFullPath(string fileNameWithExtension)
         {
             return Path.Combine(FilesDirectory, fileNameWithExtension);
