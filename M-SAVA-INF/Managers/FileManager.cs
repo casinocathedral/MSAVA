@@ -126,11 +126,6 @@ namespace M_SAVA_INF.Managers
         {
             string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
 
-            if (!File.Exists(fullPath))
-            {
-                throw new FileNotFoundException($"The file '{fullPath}' does not exist.");
-            }
-
             string metaPath = fullPath + ".meta.json";
 
             if (!File.Exists(metaPath))

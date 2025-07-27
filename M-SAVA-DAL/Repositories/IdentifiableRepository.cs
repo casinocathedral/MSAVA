@@ -24,6 +24,13 @@ namespace M_SAVA_DAL.Repositories
                 ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");
         }
 
+        public T GetByIdWithTracking(Guid id)
+        {
+            if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));
+            return _entities.SingleOrDefault(s => s.Id == id)
+                ?? throw new KeyNotFoundException($"Repository: Entity with id {id} not found.");
+        }
+
         public async Task<T> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             if (id == Guid.Empty) throw new ArgumentException("Repository: id cannot be empty.", nameof(id));

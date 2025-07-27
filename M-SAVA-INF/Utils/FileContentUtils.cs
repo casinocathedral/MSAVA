@@ -35,10 +35,15 @@ namespace M_SAVA_INF.Utils
         }
         public static bool IsSafeFileName(string fileNameWithExtension)
         {
-            return string.IsNullOrWhiteSpace(fileNameWithExtension) ||
+            bool unsafePatterns = string.IsNullOrWhiteSpace(fileNameWithExtension) ||
                 fileNameWithExtension.Contains("..") ||
                 fileNameWithExtension.Contains("/") ||
                 fileNameWithExtension.Contains("\\");
+
+            bool unsafeChars = fileNameWithExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                fileNameWithExtension.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
+
+            return !unsafePatterns && !unsafeChars;
         }
 
         public static string GetFullPathIfSafe(string fileNameWithExtension)
@@ -50,9 +55,18 @@ namespace M_SAVA_INF.Utils
             if (FileContentUtils.IsSafeFilePath(fullPath) == false)
                 throw new UnauthorizedAccessException($"Unsafe file path: {fullPath}");
 
-            if (!File.Exists(fullPath))
+            if (File.Exists(fullPath) == false)
                 throw new FileNotFoundException($"File not found: {fullPath}");
             return fullPath;
+        }
+
+        public static string GetFullPathIfSafe(string fileName, string fileExtension)
+        {
+            // if file extension starts with a dot, remove it first
+            if (fileExtension.StartsWith("."))
+                fileExtension = fileExtension.Substring(1);
+
+            return GetFullPathIfSafe($"{fileName}.{fileExtension}");
         }
 
         public static string GetFullPath(string fileNameWithExtension)

@@ -44,10 +44,11 @@ namespace M_SAVA_BLL.Services
 
         public async Task<Guid> CreateAccessGroupAsync(string name)
         {
-            UserDB user = _userService.GetSessionUserDB();
-            var now = DateTime.UtcNow;
+            Guid userId = _userService.GetSessionUserId();
+            UserDB user = _userRepository.GetByIdWithTracking(userId);
+            DateTime now = DateTime.UtcNow;
 
-            var accessGroup = new AccessGroupDB
+            AccessGroupDB accessGroup = new AccessGroupDB
             {
                 Id = Guid.NewGuid(),
                 OwnerId = user.Id,

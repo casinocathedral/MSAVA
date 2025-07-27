@@ -46,7 +46,7 @@ namespace M_SAVA_BLL.Services
             SavedFileReferenceDB db = _savedFileRepository.GetById(id);
             CanSessionUserAccessFile(db);
 
-            FileStream? fileStream = _fileManager.GetFileStream(db.FileHash, db.FileExtension.ToString());
+            FileStream fileStream = _fileManager.GetFileStream(db.FileHash, db.FileExtension.ToString());
             return MappingUtils.MapReturnFileDTO(db, fileStream: fileStream);
         }
 
@@ -58,7 +58,7 @@ namespace M_SAVA_BLL.Services
             string fileName = MappingUtils.GetFileName(db);
             string extension = FileExtensionUtils.GetFileExtension(db);
             string contentType = MetadataUtils.GetContentType(extension);
-            string fullPath = FileContentUtils.GetFullPath(db.FileHash, extension);
+            string fullPath = FileContentUtils.GetFullPathIfSafe(fileName, extension);
             return new PhysicalReturnFileDTO
             {
                 FilePath = fullPath,
@@ -74,7 +74,7 @@ namespace M_SAVA_BLL.Services
             string fileName = Path.GetFileName(fileNameWithExtension);
             string extension = Path.GetExtension(fileName).TrimStart('.');
             string contentType = MetadataUtils.GetContentType(extension);
-            string fullPath = FileContentUtils.GetFullPath(fileNameWithExtension);
+            string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
 
             return new PhysicalReturnFileDTO
             {
