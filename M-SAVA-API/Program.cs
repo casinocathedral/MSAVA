@@ -16,8 +16,32 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json;
+using Serilog;
+using Serilog.Events;
+using M_SAVA_BLL.Loggers;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Information)
+    .MinimumLevel.Information()
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .Enrich.WithProcessId()
+    .WriteTo.Async(a => a.File(
+        path: "Logs/serilog-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: null,
+        fileSizeLimitBytes: 10 * 1024 * 1024,
+        rollOnFileSizeLimit: true,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"
+    ))
+    .CreateLogger();
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 // Register controllers
 builder.Services.AddControllers(options =>
@@ -84,6 +108,9 @@ builder.Services.AddScoped<ISeedingService, SeedingService>();
 builder.Services.AddScoped<AccessGroupService>();
 builder.Services.AddScoped<InviteCodeService>();
 
+// Register custom loggers
+builder.Services.AddScoped<ServiceLogger>();
+
 // Register singletons
 builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
 builder.Services.AddSingleton<IAuthorizationHandler, NotBannedHandler>();
@@ -96,6 +123,9 @@ builder.Services.AddScoped<IIdentifiableRepository<AccessGroupDB>, IdentifiableR
 builder.Services.AddScoped<IIdentifiableRepository<JwtDB>, IdentifiableRepository<JwtDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileDataDB>, IdentifiableRepository<SavedFileDataDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<SavedFileReferenceDB>, IdentifiableRepository<SavedFileReferenceDB>>();
+// Log repositories
+builder.Services.AddScoped<IIdentifiableRepository<UserLogDB>, IdentifiableRepository<UserLogDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<AccessLogDB>, IdentifiableRepository<AccessLogDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<ErrorLogDB>, IdentifiableRepository<ErrorLogDB>>();
 
 // Register managers
@@ -128,6 +158,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "Handled {RequestPath}";
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+    };
+});
 
 app.UseRouting();
 

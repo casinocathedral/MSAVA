@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 
 namespace M_SAVA_API.Middleware
 {
@@ -35,13 +36,14 @@ namespace M_SAVA_API.Middleware
             {
                 Guid errorId = Guid.NewGuid();
                 DateTime timestamp = DateTime.UtcNow;
-                logger.LogError(ex, "Unhandled exception occurred");
-                LogError(errorId, timestamp, context, ex, errorLogRepository);
-                await HandleExceptionAsync(errorId, timestamp, context, ex, env.IsDevelopment());
+                int statusCode = GetStatusCode(ex);
+                logger.LogError(ex, "Unhandled exception occurred: " + errorId);
+                LogErrorToDb(errorId, timestamp, context, ex, errorLogRepository, statusCode);
+                await HandleExceptionAsync(errorId, timestamp, context, ex, env.IsDevelopment(), statusCode);
             }
         }
 
-        private void LogError(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, IIdentifiableRepository<ErrorLogDB> errorLogRepository)
+        private void LogErrorToDb(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, IIdentifiableRepository<ErrorLogDB> errorLogRepository, int statusCode)
         {
             Guid? userId = null;
             if (context.User?.Identity?.IsAuthenticated == true)
@@ -56,8 +58,7 @@ namespace M_SAVA_API.Middleware
             var errorLog = new ErrorLogDB
             {
                 Id = errorId,
-                Message = exception.Message,
-                StackTrace = exception.ToString(),
+                StatusCode = statusCode,
                 Timestamp = timestamp,
                 UserId = userId
             };
@@ -65,11 +66,9 @@ namespace M_SAVA_API.Middleware
             errorLogRepository.Commit();
         }
 
-        private static async Task HandleExceptionAsync(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, bool isDevelopment)
+        private static int GetStatusCode(Exception exception)
         {
             int statusCode = StatusCodes.Status500InternalServerError;
-            string message = exception.Message;
-            string? stack = null;
 
             switch (exception)
             {
@@ -174,6 +173,14 @@ namespace M_SAVA_API.Middleware
                     break;
             }
 
+            return statusCode;
+        }
+
+        private static async Task HandleExceptionAsync(Guid errorId, DateTime timestamp, HttpContext context, Exception exception, bool isDevelopment, int statusCode)
+        {
+            string message = exception.Message;
+            string? stack = null;
+
             if (isDevelopment)
             {
                 stack = exception.ToString();
@@ -189,7 +196,7 @@ namespace M_SAVA_API.Middleware
                 }
             }
 
-            var responseDto = new ErrorLogDTO
+            ErrorLogDTO responseDto = new ErrorLogDTO
             {
                 Id = errorId,
                 Message = message,

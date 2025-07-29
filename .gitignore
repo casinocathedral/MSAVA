@@ -18,6 +18,10 @@ wwwroot/_framework/
 # Auto-generated service worker assets
 service-worker-assets.js
 
+# MSAVA logs
+M-SAVA-API/Logs/*
+!M-SAVA-API/Logs/dummy.txt
+
 # .env file
 M-SAVA-INF/.env
 
