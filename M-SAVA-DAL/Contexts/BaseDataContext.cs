@@ -51,7 +51,9 @@ namespace M_SAVA_DAL.Contexts
         public DbSet<AccessCodeDB> AccessCodes { get; set; }
         public DbSet<AccessGroupDB> AccessGroups { get; set; }
 
-        // Error log entities
+        // Log entities
+        public DbSet<AccessLogDB> AccessLogs { get; set; }
+        public DbSet<UserLogDB> UserLogs { get; set; }
         public DbSet<ErrorLogDB> ErrorLogs { get; set; }
     }
 }
