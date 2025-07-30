@@ -38,7 +38,7 @@ namespace M_SAVA_BLL.Loggers
             _logger.LogInformation("{Message}", message);
         }
 
-        public string SanitizeMessage(string message)
+        public string SanitizeString(string message)
         {
             if (string.IsNullOrEmpty(message))
             {
@@ -90,8 +90,8 @@ namespace M_SAVA_BLL.Loggers
                 StatusCode = statusCode,
                 Timestamp = DateTime.UtcNow
             };
-
-            _logger.LogError("Status Code: {StatusCode}, Message: {Message}, UserId: {UserId}", statusCode, message, userId);
+            string sanitizedMessage = SanitizeString(message);
+            _logger.LogError("Status Code: {StatusCode}, Message: {Message}, UserId: {UserId}", statusCode, sanitizedMessage, userId);
             _errorLogRepository.Insert(errorLog);
             _errorLogRepository.Commit();
         }
@@ -107,9 +107,9 @@ namespace M_SAVA_BLL.Loggers
                 Timestamp = DateTime.UtcNow
             };
 
-            string sanitizedMessage = SanitizeMessage(message);
+            string sanitizedMessage = SanitizeString(message);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, InviteCodeId: {CodeId}", actionString, message, userId, codeId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, InviteCodeId: {CodeId}", actionString, sanitizedMessage, userId, codeId);
             _inviteLogRepository.Insert(inviteLog);
             _inviteLogRepository.Commit();
         }
@@ -124,7 +124,7 @@ namespace M_SAVA_BLL.Loggers
                 GroupId = groupId,
                 Timestamp = DateTime.UtcNow
             };
-            string sanitizedMessage = SanitizeMessage(message);
+            string sanitizedMessage = SanitizeString(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, GroupId: {GroupId}", actionString, sanitizedMessage, userId, groupId);
             _groupLogRepository.Insert(groupLog);
@@ -141,9 +141,10 @@ namespace M_SAVA_BLL.Loggers
                 FileRefId = refId,
                 Timestamp = DateTime.UtcNow
             };
-            string sanitizedMessage = SanitizeMessage(message);
+            string sanitizedMessage = SanitizeString(message);
+            string sanitizedFileName = SanitizeString(fileNameWithExtension);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, sanitizedMessage, userId, fileNameWithExtension, refId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, sanitizedMessage, userId, sanitizedFileName, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
         }
@@ -157,7 +158,7 @@ namespace M_SAVA_BLL.Loggers
                 FileRefId = refId,
                 Timestamp = DateTime.UtcNow
             };
-            string sanitizedMessage = SanitizeMessage(message);
+            string sanitizedMessage = SanitizeString(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, FileRefId: {refId}", actionString, sanitizedMessage, userId, refId);
             _accessLogRepository.Insert(accessLog);
@@ -173,7 +174,7 @@ namespace M_SAVA_BLL.Loggers
                 AdminId = adminId,
                 Action = action,
             };
-            string sanitizedMessage = SanitizeMessage(message);
+            string sanitizedMessage = SanitizeString(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, AdminId: {AdminId}", actionString, sanitizedMessage, userId, adminId);
 
