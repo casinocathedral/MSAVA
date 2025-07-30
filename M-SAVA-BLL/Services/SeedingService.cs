@@ -36,18 +36,8 @@ namespace M_SAVA_BLL.Services
 
         private Guid SeedAdminUser()
         {
-            string adminUsername = _env.GetValue("ADMIN_USERNAME");
-            string adminPassword = _env.GetValue("ADMIN_PASSWORD");
-            string inviteCode = _env.GetValue("ADMIN_INVITE_CODE");
-            Guid inviteCodeId = Guid.Empty;
-            if (Guid.TryParse(inviteCode, out var parsedId))
-            {
-                inviteCodeId = parsedId;
-            }
-            else
-            {
-                throw new InvalidOperationException($"Invalid 'ADMIN_INVITE_CODE_ID' value: {inviteCode}");
-            }
+            string adminUsername = _env.GetValue("admin_username");
+            string adminPassword = _env.GetValue("admin_password");
 
             UserDB? adminUser = _userRepo.GetAllAsReadOnly().FirstOrDefault(u => u.Username == adminUsername);
             if (adminUser == null)
@@ -67,13 +57,6 @@ namespace M_SAVA_BLL.Services
                 };
                 _userRepo.Insert(adminUser);
                 _userRepo.Commit();
-            }
-            InviteCodeDB? inviteCodeDb = _inviteCodeRepo.GetAll().FirstOrDefault(ic => ic.Id == inviteCodeId);
-            if (inviteCodeDb != null && inviteCodeDb.OwnerId == Guid.Empty)
-            {
-                inviteCodeDb.OwnerId = adminUser.Id;
-                _inviteCodeRepo.Update(inviteCodeDb);
-                _inviteCodeRepo.Commit();
             }
             return adminUser.Id;
         }

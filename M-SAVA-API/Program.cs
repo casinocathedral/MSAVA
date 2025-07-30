@@ -91,9 +91,14 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<AuthorizeCheckOperationFilter>();
 });
 
+// Register local environment
+builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
+var env = LocalEnvironment.Instance;
+
 // Register main database context
+string baseDbConnectionString = $"Host={env.GetValue("postgres_basedb_host")};Port={env.GetValue("postgres_basedb_port")};Database={env.GetValue("postgres_basedb_dbname")};Username={env.GetValue("postgres_basedb_user")};Password={env.GetValue("postgres_basedb_password")};Ssl Mode={env.GetValue("postgres_basedb_ssl_mode")}";
 builder.Services.AddDbContext<BaseDataContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("MainDatabaseConnection")));
+    options.UseNpgsql(baseDbConnectionString));
 
 // Register IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -112,7 +117,6 @@ builder.Services.AddScoped<InviteCodeService>();
 builder.Services.AddScoped<ServiceLogger>();
 
 // Register singletons
-builder.Services.AddSingleton<ILocalEnvironment, LocalEnvironment>();
 builder.Services.AddSingleton<IAuthorizationHandler, NotBannedHandler>();
 
 // Register repositories
