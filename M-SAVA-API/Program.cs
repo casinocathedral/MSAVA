@@ -132,6 +132,7 @@ builder.Services.AddScoped<IIdentifiableRepository<UserLogDB>, IdentifiableRepos
 builder.Services.AddScoped<IIdentifiableRepository<AccessLogDB>, IdentifiableRepository<AccessLogDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<ErrorLogDB>, IdentifiableRepository<ErrorLogDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<GroupLogDB>, IdentifiableRepository<GroupLogDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<InviteLogDB>, IdentifiableRepository<InviteLogDB>>();
 
 // Register managers
 builder.Services.AddScoped<FileManager>();
