@@ -38,6 +38,49 @@ namespace M_SAVA_BLL.Loggers
             _logger.LogInformation("{Message}", message);
         }
 
+        public string SanitizeMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return string.Empty;
+            }
+            string sanitizedMessage = message.Replace(Environment.NewLine, "");
+            sanitizedMessage = message
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;")
+                .Replace("\"", "&quot;")
+                .Replace("'", "&#39;")
+                .Replace("&", "&amp;")
+                .Replace(";", "&#59;")
+                .Replace(":", "&#58;")
+                .Replace("(", "&#40;")
+                .Replace(")", "&#41;")
+                .Replace("{", "&#123;")
+                .Replace("}", "&#125;")
+                .Replace("[", "&#91;")
+                .Replace("]", "&#93;")
+                .Replace("`", "&#96;")
+                .Replace("\\", "&#92;")
+                .Replace("/", "&#47;")
+                .Replace("=", "&#61;")
+                .Replace("+", "&#43;")
+                .Replace("$", "&#36;")
+                .Replace("%", "&#37;")
+                .Replace("!", "&#33;")
+                .Replace("@", "&#64;")
+                .Replace("#", "&#35;")
+                .Replace("^", "&#94;")
+                .Replace("*", "&#42;")
+                .Replace("|", "&#124;")
+                .Replace("~", "&#126;")
+                .Replace(",", "&#44;")
+                .Replace(".", "&#46;")
+                .Replace("?", "&#63;")
+                .Replace("\t", "&#9;");
+            sanitizedMessage = sanitizedMessage.Length > 200 ? sanitizedMessage.Substring(0, 200) : sanitizedMessage;
+            return sanitizedMessage;
+        }
+
         public void WriteLog(int statusCode, string message, Guid? userId)
         {
             var errorLog = new ErrorLogDB
@@ -64,6 +107,7 @@ namespace M_SAVA_BLL.Loggers
                 Timestamp = DateTime.UtcNow
             };
 
+            string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, InviteCodeId: {CodeId}", actionString, message, userId, codeId);
             _inviteLogRepository.Insert(inviteLog);
@@ -80,6 +124,7 @@ namespace M_SAVA_BLL.Loggers
                 GroupId = groupId,
                 Timestamp = DateTime.UtcNow
             };
+            string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, GroupId: {GroupId}", actionString, message, userId, groupId);
             _groupLogRepository.Insert(groupLog);
@@ -96,8 +141,8 @@ namespace M_SAVA_BLL.Loggers
                 FileRefId = refId,
                 Timestamp = DateTime.UtcNow
             };
+            string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, message, userId, fileNameWithExtension, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
@@ -112,8 +157,8 @@ namespace M_SAVA_BLL.Loggers
                 FileRefId = refId,
                 Timestamp = DateTime.UtcNow
             };
+            string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, FileRefId: {refId}", actionString, message, userId, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
@@ -128,6 +173,7 @@ namespace M_SAVA_BLL.Loggers
                 AdminId = adminId,
                 Action = action,
             };
+            string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
             _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, AdminId: {AdminId}", actionString, message, userId, adminId);
 
