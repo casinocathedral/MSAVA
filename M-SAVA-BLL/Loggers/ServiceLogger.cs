@@ -15,17 +15,22 @@ namespace M_SAVA_BLL.Loggers
         private readonly IIdentifiableRepository<ErrorLogDB> _errorLogRepository;
         private readonly IIdentifiableRepository<AccessLogDB> _accessLogRepository;
         private readonly IIdentifiableRepository<UserLogDB> _userLogRepository;
-
+        private readonly IIdentifiableRepository<GroupLogDB> _groupLogRepository;
+        private readonly IIdentifiableRepository<InviteLogDB> _inviteLogRepository;
         public ServiceLogger(
             ILogger<ServiceLogger> logger,
             IIdentifiableRepository<ErrorLogDB> errorLogRepository,
             IIdentifiableRepository<AccessLogDB> accessLogRepository,
-            IIdentifiableRepository<UserLogDB> userLogRepository)
+            IIdentifiableRepository<UserLogDB> userLogRepository,
+            IIdentifiableRepository<GroupLogDB> groupLogRepository,
+            IIdentifiableRepository<InviteLogDB> inviteLogRepository)
         {
             _logger = logger;
             _errorLogRepository = errorLogRepository;
             _accessLogRepository = accessLogRepository;
             _userLogRepository = userLogRepository;
+            _groupLogRepository = groupLogRepository;
+            _inviteLogRepository = inviteLogRepository;
         }
 
         public void LogInformation(string message)
@@ -48,18 +53,68 @@ namespace M_SAVA_BLL.Loggers
             _errorLogRepository.Commit();
         }
 
-        public void WriteLog(AccessLogActions action, string message, Guid userId)
+        public void WriteLog(InviteLogActions action, string message, Guid userId, Guid codeId)
+        {
+            var inviteLog = new InviteLogDB
+            {
+                Id = Guid.NewGuid(),
+                Action = action,
+                UserId = userId,
+                InviteCodeId = codeId,
+                Timestamp = DateTime.UtcNow
+            };
+
+            string actionString = action.ToString();
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, InviteCodeId: {CodeId}", actionString, message, userId, codeId);
+            _inviteLogRepository.Insert(inviteLog);
+            _inviteLogRepository.Commit();
+        }
+
+        public void WriteLog(GroupLogActions action, string message, Guid userId, Guid groupId)
+        {
+            var groupLog = new GroupLogDB
+            {
+                Id = Guid.NewGuid(),
+                Action = action,
+                UserId = userId,
+                GroupId = groupId,
+                Timestamp = DateTime.UtcNow
+            };
+            string actionString = action.ToString();
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, GroupId: {GroupId}", actionString, message, userId, groupId);
+            _groupLogRepository.Insert(groupLog);
+            _groupLogRepository.Commit();
+        }
+
+        public void WriteLog(AccessLogActions action, string message, Guid userId, string fileNameWithExtension, Guid refId)
         {
             var accessLog = new AccessLogDB
             {
                 Id = Guid.NewGuid(),
                 Action = action,
                 UserId = userId,
+                FileRefId = refId,
                 Timestamp = DateTime.UtcNow
             };
             string actionString = action.ToString();
 
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}", actionString, message, userId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, message, userId, fileNameWithExtension, refId);
+            _accessLogRepository.Insert(accessLog);
+            _accessLogRepository.Commit();
+        }
+        public void WriteLog(AccessLogActions action, string message, Guid userId, Guid refId)
+        {
+            var accessLog = new AccessLogDB
+            {
+                Id = Guid.NewGuid(),
+                Action = action,
+                UserId = userId,
+                FileRefId = refId,
+                Timestamp = DateTime.UtcNow
+            };
+            string actionString = action.ToString();
+
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, FileRefId: {refId}", actionString, message, userId, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
         }

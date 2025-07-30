@@ -55,5 +55,6 @@ namespace M_SAVA_DAL.Contexts
         public DbSet<AccessLogDB> AccessLogs { get; set; }
         public DbSet<UserLogDB> UserLogs { get; set; }
         public DbSet<ErrorLogDB> ErrorLogs { get; set; }
+        public DbSet<GroupLogDB> GroupLogs { get; set; }
     }
 }

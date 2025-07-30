@@ -59,7 +59,7 @@ namespace M_SAVA_INF.Managers
                 {
                     try
                     {
-                        List<SavedFileMetaJSON> existingList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(existingJson);
+                        List<SavedFileMetaJSON> existingList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(existingJson) ?? new List<SavedFileMetaJSON>();
                         if (existingList != null)
                             metaList.AddRange(existingList);
                     }
@@ -122,7 +122,7 @@ namespace M_SAVA_INF.Managers
             }
         }
 
-        public bool CheckFileAccessByPath(string fileNameWithExtension, List<Guid> userAccessGroups)
+        public Guid CheckFileAccessByPath(string fileNameWithExtension, List<Guid> userAccessGroups)
         {
             string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
 
@@ -134,19 +134,21 @@ namespace M_SAVA_INF.Managers
             }
 
             string metaJson = File.ReadAllText(metaPath);
-            List<SavedFileMetaJSON> metaList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(metaJson);
+            List<SavedFileMetaJSON> metaList = JsonSerializer.Deserialize<List<SavedFileMetaJSON>>(metaJson) ?? new List<SavedFileMetaJSON>();
 
             if (metaList == null || metaList.Count == 0)
             {
                 throw new FileNotFoundException($"Meta file '{metaPath}' is invalid or empty.");
             }
 
-            bool hasAccess = metaList.Any(meta => meta.PublicDownload || (userAccessGroups != null && userAccessGroups.Contains(meta.AccessGroupId)));
-            if (!hasAccess)
+            foreach (var meta in metaList)
             {
-                throw new UnauthorizedAccessException("User does not have access to this file's access group.");
+                if (meta.PublicDownload || (userAccessGroups != null && userAccessGroups.Contains(meta.AccessGroupId)))
+                {
+                    return meta.RefId;
+                }
             }
-            return true;
+            throw new UnauthorizedAccessException("User does not have permission to access this file.");
         }
     }
 }

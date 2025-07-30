@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Models
 {
-    public class AccessLogDB : IIdentifiableDB
+    public class GroupLogDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public required Guid UserId { get; set; }
         public UserDB? User { get; set; }
-        public required Guid FileRefId { get; set; }
-        public SavedFileReferenceDB? FileRef { get; set; }
-        public required AccessLogActions Action { get; set; }
-
+        public required Guid GroupId { get; set; }
+        public AccessGroupDB? Group { get; set; }
+        public required GroupLogActions Action { get; set; }
     }
 }

@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace M_SAVA_DAL.Models
 {
-    public class AccessLogDB : IIdentifiableDB
+    public class InviteLogDB : IIdentifiableDB
     {
         public Guid Id { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public required Guid UserId { get; set; }
         public UserDB? User { get; set; }
-        public required Guid FileRefId { get; set; }
-        public SavedFileReferenceDB? FileRef { get; set; }
-        public required AccessLogActions Action { get; set; }
+        public required Guid InviteCodeId { get; set; }
+        public InviteCodeDB? InviteCode { get; set; }
+        public required InviteLogActions Action { get; set; }
 
     }
 }

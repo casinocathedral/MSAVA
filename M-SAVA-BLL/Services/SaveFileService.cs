@@ -16,6 +16,8 @@ using M_SAVA_INF.Managers;
 using M_SAVA_INF.Utils;
 using M_SAVA_INF.Models;
 using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_BLL.Loggers;
+using M_SAVA_DAL.Utils;
 
 namespace M_SAVA_BLL.Services
 {
@@ -25,18 +27,21 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<SavedFileDataDB> _savedDataRepository;
         private readonly FileManager _fileManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ServiceLogger _serviceLogger;
 
         public SaveFileService(
             IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository,
             IIdentifiableRepository<SavedFileDataDB> savedDataRepository,
             IUserService userService,
             FileManager fileManager,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ServiceLogger serviceLogger)
         {
             _savedRefsRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository), "Service: savedFileRepository cannot be null.");
             _savedDataRepository = savedDataRepository ?? throw new ArgumentNullException(nameof(savedDataRepository), "Service: savedDataRepository cannot be null.");
             _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager), "Service: fileManager cannot be null.");
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor), "Service: httpContextAccessor cannot be null.");
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger), "Service: serviceLogger cannot be null.");
         }
 
         public async Task<Guid> CreateFileFromStreamAsync(FileToSaveDTO dto, CancellationToken cancellationToken = default)
@@ -93,13 +98,13 @@ namespace M_SAVA_BLL.Services
             _savedDataRepository.Insert(savedFileDataDb);
             await _savedDataRepository.CommitAsync();
 
-            return savedFileDb.Id;
-        }
+            string fileName = MappingUtils.GetFileName(savedFileDb);
+            string fileExtension = FileExtensionUtils.GetFileExtension(savedFileDb);
+            string fileNameWithExtension = $"{fileName}{fileExtension}";
 
-        public async Task DeleteFileAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            await _savedRefsRepository.DeleteByIdAsync(id);
-            await _savedRefsRepository.CommitAsync();
+            _serviceLogger.WriteLog(AccessLogActions.NewFileCreated, $"File created: {fileNameWithExtension}", sessionUserId, fileNameWithExtension, savedFileDb.Id);
+
+            return savedFileDb.Id;
         }
     }
 }

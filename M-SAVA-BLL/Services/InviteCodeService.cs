@@ -1,4 +1,5 @@
-﻿using M_SAVA_BLL.Services.Interfaces;
+﻿using M_SAVA_BLL.Loggers;
+using M_SAVA_BLL.Services.Interfaces;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using System;
@@ -14,15 +15,18 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<InviteCodeDB> _inviteCodeRepository;
         private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly IUserService _userService;
+        private readonly ServiceLogger _serviceLogger;
 
         public InviteCodeService(
             IIdentifiableRepository<InviteCodeDB> inviteCodeRepo,
             IIdentifiableRepository<UserDB> userRepository,
-            IUserService userService)
+            IUserService userService,
+            ServiceLogger serviceLogger)
         {
             _inviteCodeRepository = inviteCodeRepo ?? throw new ArgumentNullException(nameof(inviteCodeRepo));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public async Task<Guid> CreateNewInviteCode(int maxUses, DateTime expiresAt)
@@ -38,6 +42,7 @@ namespace M_SAVA_BLL.Services
             };
             _inviteCodeRepository.Insert(inviteCode);
             await _inviteCodeRepository.CommitAsync();
+            _serviceLogger.WriteLog(InviteLogActions.InviteCodeCreated, $"Invite code created by user {user.Username}.", user.Id, inviteCode.Id);
             return inviteCode.Id;
         }
 

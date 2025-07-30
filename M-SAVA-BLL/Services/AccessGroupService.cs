@@ -1,4 +1,5 @@
-﻿using M_SAVA_BLL.Services.Interfaces;
+﻿using M_SAVA_BLL.Loggers;
+using M_SAVA_BLL.Services.Interfaces;
 using M_SAVA_DAL.Models;
 using M_SAVA_DAL.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace M_SAVA_BLL.Services
 {
@@ -17,19 +19,22 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly IUserService _userService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ServiceLogger _serviceLogger;
 
         public AccessGroupService(
             IIdentifiableRepository<AccessCodeDB> accessCodeRepo,
             IIdentifiableRepository<AccessGroupDB> accessGroupRepo,
             IUserService userService,
             IHttpContextAccessor httpContextAccessor,
-            IIdentifiableRepository<UserDB> userRepository)
+            IIdentifiableRepository<UserDB> userRepository,
+            ServiceLogger serviceLogger)
         {
             _accessCodeRepository = accessCodeRepo ?? throw new ArgumentNullException(nameof(accessCodeRepo));
             _accessGroupRepository = accessGroupRepo ?? throw new ArgumentNullException(nameof(accessGroupRepo));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
             _userRepository = userRepository;
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public async Task<List<AccessGroupDB>> GetUserAccessGroupsAsync(Guid userId)
@@ -59,14 +64,8 @@ namespace M_SAVA_BLL.Services
             };
             _accessGroupRepository.Insert(accessGroup);
             await _accessGroupRepository.CommitAsync();
+            _serviceLogger.WriteLog(GroupLogActions.AccessGroupCreated, $"Access group '{name}' created by user {user.Username}.", user.Id, accessGroup.Id);
 
-            await AddAccessGroupDbToUserDbAsync(accessGroup, user);
-
-            return accessGroup.Id;
-        }
-
-        private async Task AddAccessGroupDbToUserDbAsync(AccessGroupDB accessGroup, UserDB user)
-        {
             if (accessGroup.Users == null)
             {
                 accessGroup.Users = new List<UserDB>();
@@ -81,6 +80,9 @@ namespace M_SAVA_BLL.Services
 
             _userRepository.Update(user);
             await _userRepository.CommitAsync();
+
+            _serviceLogger.WriteLog(GroupLogActions.AccessGroupUserAdded, $"User {user.Username} added to access group '{name}'.", user.Id, accessGroup.Id);
+            return accessGroup.Id;
         }
 
         public async Task AddAccessGroupToUserAsync(Guid accessGroupId, Guid userId)
@@ -107,8 +109,12 @@ namespace M_SAVA_BLL.Services
             {
                 throw new InvalidOperationException($"User with ID {user.Id} is already in AccessGroup with ID {accessGroup.Id}.");
             }
-            
-            await AddAccessGroupDbToUserDbAsync(accessGroup, user);
+            user.AccessGroups.Add(accessGroup);
+
+            _userRepository.Update(user);
+            await _userRepository.CommitAsync();
+
+            _serviceLogger.WriteLog(GroupLogActions.AccessGroupUserAdded, $"User {user.Username} added to access group '{accessGroup.Name}'.", user.Id, accessGroup.Id);
         }
 
         private bool IsSessionUserAdminOrOwnerOfAccessGroup(AccessGroupDB accessGroup)

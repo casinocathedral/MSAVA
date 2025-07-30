@@ -13,6 +13,7 @@ using M_SAVA_INF.Environment;
 using M_SAVA_BLL.Utils;
 using Microsoft.Extensions.Configuration;
 using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_BLL.Loggers;
 
 namespace M_SAVA_BLL.Services
 {
@@ -24,13 +25,15 @@ namespace M_SAVA_BLL.Services
         private readonly string _jwtIssuer;
         private readonly string _jwtAudience;
         private readonly byte[] _jwtKeyBytes;
+        private readonly ServiceLogger _serviceLogger;
 
         public LoginService(
             IIdentifiableRepository<UserDB> userRepository,
             IIdentifiableRepository<JwtDB> jwtRepository,
             InviteCodeService inviteCodeService,
             IConfiguration configuration,
-            ILocalEnvironment env)
+            ILocalEnvironment env,
+            ServiceLogger serviceLogger)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _jwtRepository = jwtRepository ?? throw new ArgumentNullException(nameof(jwtRepository));
@@ -38,6 +41,7 @@ namespace M_SAVA_BLL.Services
             _jwtAudience = env.GetValue("jwt_issuer_audience");
             _jwtKeyBytes = env.GetSigningKeyBytes();
             _inviteCodeService = inviteCodeService ?? throw new ArgumentNullException(nameof(inviteCodeService));
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public async Task<LoginResponseDTO> LoginAsync(LoginRequestDTO request, CancellationToken cancellationToken = default)
@@ -47,9 +51,13 @@ namespace M_SAVA_BLL.Services
                 .Include(u => u.AccessGroups)
                 .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
             if (user == null || !PasswordUtils.VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
+            {
                 throw new InvalidOperationException("Username doesn't exist or password is incorrect.");
+            }
 
             JwtDB token = await GenerateJwtTokenAsync(user);
+
+            _serviceLogger.WriteLog(UserLogAction.SessionLogIn, $"User {user.Username} logged in successfully.", user.Id, null);
 
             return new LoginResponseDTO { Token = token.TokenString };
         }
@@ -72,7 +80,7 @@ namespace M_SAVA_BLL.Services
                 claims.Add(new Claim(ClaimTypes.Role, "Banned"));
             if (user.IsWhitelisted)
                 claims.Add(new Claim(ClaimTypes.Role, "Whitelisted"));
-            claims.Add(new Claim("inviteCode", user.InviteCodeId.ToString()));
+            claims.Add(new Claim("inviteCode", user.InviteCodeId?.ToString() ?? string.Empty));
 
             List<Guid> accessGroupGuids = user.AccessGroups?.Select(g => g.Id).ToList() ?? new List<Guid>();
             claims.Add(new Claim("accessGroups", string.Join(",", accessGroupGuids)));
@@ -114,15 +122,21 @@ namespace M_SAVA_BLL.Services
 
             bool isValidInviteCode = _inviteCodeService.IsValidInviteCode(request.InviteCode);
             if (!isValidInviteCode)
+            {
                 throw new InvalidOperationException("Invalid or expired invite code.");
+            }
 
             bool exists = await _userRepository.GetAllAsReadOnly()
                 .AnyAsync(u => u.Username == request.Username, cancellationToken);
             if (exists)
+            {
                 throw new InvalidOperationException("Username already exists.");
+            }
 
             if (request.InviteCode == Guid.Empty)
+            {
                 throw new InvalidOperationException("Invite code is required.");
+            }
 
             byte[] salt = PasswordUtils.GenerateSalt();
             byte[] hash = PasswordUtils.HashPassword(request.Password, salt);
@@ -141,6 +155,8 @@ namespace M_SAVA_BLL.Services
 
             _userRepository.Insert(user);
             await _userRepository.CommitAsync();
+
+            _serviceLogger.WriteLog(UserLogAction.AccountRegistered, $"User {user.Username} registered successfully.", user.Id, null);
 
             return user.Id;
         }

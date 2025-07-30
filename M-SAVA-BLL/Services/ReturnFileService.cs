@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 using M_SAVA_INF.Models;
 using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_BLL.Loggers;
 
 namespace M_SAVA_BLL.Services
 {
@@ -27,18 +28,21 @@ namespace M_SAVA_BLL.Services
         private readonly IUserService _userService;
         private readonly AccessGroupService _accessGroupService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ServiceLogger _serviceLogger;
 
         public ReturnFileService(IIdentifiableRepository<SavedFileReferenceDB> savedFileRepository,
             IUserService userService,
             AccessGroupService accessGroupService,
             FileManager fileManager,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ServiceLogger serviceLogger)
         {
             _savedFileRepository = savedFileRepository ?? throw new ArgumentNullException(nameof(savedFileRepository));
             _fileManager = fileManager ?? throw new ArgumentNullException(nameof(fileManager));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _accessGroupService = accessGroupService ?? throw new ArgumentNullException(nameof(accessGroupService));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public StreamReturnFileDTO GetFileStreamById(Guid id)
@@ -47,6 +51,12 @@ namespace M_SAVA_BLL.Services
             CanSessionUserAccessFile(db);
 
             FileStream fileStream = _fileManager.GetFileStream(db.FileHash, db.FileExtension.ToString());
+            var claims = _userService.GetSessionClaims();
+
+            string fileName = MappingUtils.GetFileName(db);
+            string extension = FileExtensionUtils.GetFileExtension(db);
+            string fileNameWithExtension = $"{fileName}{extension}";
+            _serviceLogger.WriteLog(AccessLogActions.AccessViaFileStream, $"User accessed file stream for fileRefId: {db.Id}", claims.UserId, fileNameWithExtension, db.Id);
             return MappingUtils.MapReturnFileDTO(db, fileStream: fileStream);
         }
 
@@ -59,6 +69,9 @@ namespace M_SAVA_BLL.Services
             string extension = FileExtensionUtils.GetFileExtension(db);
             string contentType = MetadataUtils.GetContentType(extension);
             string fullPath = FileContentUtils.GetFullPathIfSafe(fileName, extension);
+            string fileNameWithExtension = $"{fileName}{extension}";
+            var claims = _userService.GetSessionClaims();
+            _serviceLogger.WriteLog(AccessLogActions.AccessViaPhysicalFile, $"User accessed physical file for fileRefId: {db.Id}", claims.UserId, fileNameWithExtension, db.Id);
             return new PhysicalReturnFileDTO
             {
                 FilePath = fullPath,
@@ -69,13 +82,13 @@ namespace M_SAVA_BLL.Services
 
         public PhysicalReturnFileDTO GetPhysicalFileReturnDataByPath(string fileNameWithExtension)
         {
-            CanSessionUserAccessFile(fileNameWithExtension);
-
+            Guid refId = CanSessionUserAccessFile(fileNameWithExtension);
             string fileName = Path.GetFileName(fileNameWithExtension);
             string extension = Path.GetExtension(fileName).TrimStart('.');
             string contentType = MetadataUtils.GetContentType(extension);
             string fullPath = FileContentUtils.GetFullPathIfSafe(fileNameWithExtension);
-
+            var claims = _userService.GetSessionClaims();
+            _serviceLogger.WriteLog(AccessLogActions.AccessViaPhysicalFile, $"User accessed physical file by path: {fileNameWithExtension}", claims.UserId, fileNameWithExtension, refId);
             return new PhysicalReturnFileDTO
             {
                 FilePath = fullPath,
@@ -86,13 +99,13 @@ namespace M_SAVA_BLL.Services
 
         public StreamReturnFileDTO GetFileStreamByPath(string fileNameWithExtension)
         {
-            CanSessionUserAccessFile(fileNameWithExtension);
-
+            Guid refId = CanSessionUserAccessFile(fileNameWithExtension);
             string fileName = Path.GetFileName(fileNameWithExtension);
             string extension = Path.GetExtension(fileName).TrimStart('.');
             string contentType = MetadataUtils.GetContentType(extension);
             FileStream fileStream = _fileManager.GetFileStream(fileNameWithExtension);
-
+            var claims = _userService.GetSessionClaims();
+            _serviceLogger.WriteLog(AccessLogActions.AccessViaFileStream, $"User accessed file stream by path: {fileNameWithExtension}", claims.UserId, fileNameWithExtension, refId);
             return new StreamReturnFileDTO
             {
                 FileName = fileName,
@@ -101,13 +114,9 @@ namespace M_SAVA_BLL.Services
             };
         }
 
-        private bool CanSessionUserAccessFile(string fileNameWithExtension)
+        private Guid CanSessionUserAccessFile(string fileNameWithExtension)
         {
             SessionDTO claims = _userService.GetSessionClaims();
-            if (claims.IsAdmin)
-            {
-                return true;
-            }
             try
             {
                 return _fileManager.CheckFileAccessByPath(fileNameWithExtension, claims.AccessGroups);

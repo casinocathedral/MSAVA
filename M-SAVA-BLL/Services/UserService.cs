@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_BLL.Loggers;
 
 namespace M_SAVA_BLL.Services
 {
@@ -16,11 +17,13 @@ namespace M_SAVA_BLL.Services
     {
         private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ServiceLogger _serviceLogger;
 
-        public UserService(IIdentifiableRepository<UserDB> userRepository, IHttpContextAccessor httpContextAccessor)
+        public UserService(IIdentifiableRepository<UserDB> userRepository, IHttpContextAccessor httpContextAccessor, ServiceLogger serviceLogger)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public UserDTO GetUserById(Guid id)
@@ -104,12 +107,14 @@ namespace M_SAVA_BLL.Services
         {
             _userRepository.DeleteById(id);
             _userRepository.Commit();
+            _serviceLogger.WriteLog(UserLogAction.AccountDeletion, $"User deleted: {id}", id, null);
         }
 
         public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
         {
             await _userRepository.DeleteByIdAsync(id);
             await _userRepository.CommitAsync();
+            _serviceLogger.WriteLog(UserLogAction.AccountDeletion, $"User deleted: {id}", id, null);
         }
     }
 }

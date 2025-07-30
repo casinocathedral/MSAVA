@@ -131,6 +131,7 @@ builder.Services.AddScoped<IIdentifiableRepository<SavedFileReferenceDB>, Identi
 builder.Services.AddScoped<IIdentifiableRepository<UserLogDB>, IdentifiableRepository<UserLogDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<AccessLogDB>, IdentifiableRepository<AccessLogDB>>();
 builder.Services.AddScoped<IIdentifiableRepository<ErrorLogDB>, IdentifiableRepository<ErrorLogDB>>();
+builder.Services.AddScoped<IIdentifiableRepository<GroupLogDB>, IdentifiableRepository<GroupLogDB>>();
 
 // Register managers
 builder.Services.AddScoped<FileManager>();
@@ -179,7 +180,7 @@ app.UseRouting();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "Data")),
-    RequestPath = "/publicfiles",
+    RequestPath = "/api/files/public",
     OnPrepareResponse = ctx =>
     {
         var filePath = ctx.File.PhysicalPath;

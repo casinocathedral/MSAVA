@@ -10,6 +10,7 @@ using M_SAVA_INF.Environment;
 using System;
 using System.Linq;
 using M_SAVA_BLL.Services.Interfaces;
+using M_SAVA_BLL.Loggers;
 
 namespace M_SAVA_BLL.Services
 {
@@ -18,15 +19,18 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<UserDB> _userRepo;
         private readonly IIdentifiableRepository<InviteCodeDB> _inviteCodeRepo;
         private readonly ILocalEnvironment _env;
+        private readonly ServiceLogger _serviceLogger;
 
         public SeedingService(
             IIdentifiableRepository<UserDB> userRepo,
             IIdentifiableRepository<InviteCodeDB> inviteCodeRepo,
-            ILocalEnvironment env)
+            ILocalEnvironment env,
+            ServiceLogger serviceLogger)
         {
             _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
             _inviteCodeRepo = inviteCodeRepo ?? throw new ArgumentNullException(nameof(inviteCodeRepo));
             _env = env ?? throw new ArgumentNullException(nameof(env));
+            _serviceLogger = serviceLogger ?? throw new ArgumentNullException(nameof(serviceLogger));
         }
 
         public void Seed()
@@ -57,6 +61,7 @@ namespace M_SAVA_BLL.Services
                 };
                 _userRepo.Insert(adminUser);
                 _userRepo.Commit();
+                _serviceLogger.WriteLog(UserLogAction.AccountCreation, $"Admin user '{adminUsername}' created during seeding.", adminUser.Id, null);
             }
             return adminUser.Id;
         }
