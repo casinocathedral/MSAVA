@@ -54,9 +54,9 @@ namespace M_SAVA_INF.Environment
 
         public byte[] GetSigningKeyBytes()
         {
-            string key = GetValue("issuer_signing_key");
+            string key = GetValue("jwt_issuer_signing_key");
             if (string.IsNullOrWhiteSpace(key))
-                throw new InvalidOperationException($"'issuer_signing_key' is missing or empty in {EnvFileName}");
+                throw new InvalidOperationException($"'jwt_issuer_signing_key' is missing or empty in {EnvFileName}");
             return Encoding.UTF8.GetBytes(key);
         }
     }

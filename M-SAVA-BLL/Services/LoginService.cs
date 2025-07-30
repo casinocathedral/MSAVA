@@ -22,6 +22,7 @@ namespace M_SAVA_BLL.Services
         private readonly IIdentifiableRepository<JwtDB> _jwtRepository;
         private readonly InviteCodeService _inviteCodeService;
         private readonly string _jwtIssuer;
+        private readonly string _jwtAudience;
         private readonly byte[] _jwtKeyBytes;
 
         public LoginService(
@@ -33,7 +34,8 @@ namespace M_SAVA_BLL.Services
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _jwtRepository = jwtRepository ?? throw new ArgumentNullException(nameof(jwtRepository));
-            _jwtIssuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer configuration is missing.");
+            _jwtIssuer = env.GetValue("jwt_issuer_name");
+            _jwtAudience = env.GetValue("jwt_issuer_audience");
             _jwtKeyBytes = env.GetSigningKeyBytes();
             _inviteCodeService = inviteCodeService ?? throw new ArgumentNullException(nameof(inviteCodeService));
         }
@@ -80,7 +82,7 @@ namespace M_SAVA_BLL.Services
 
             JwtSecurityToken token = new JwtSecurityToken(
                 issuer: _jwtIssuer,
-                audience: _jwtIssuer,
+                audience: _jwtAudience,
                 claims: claims,
                 notBefore: issuedAt,
                 expires: expiresAt,
