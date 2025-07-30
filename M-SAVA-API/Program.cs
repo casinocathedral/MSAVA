@@ -20,10 +20,14 @@ using Serilog;
 using Serilog.Events;
 using M_SAVA_BLL.Loggers;
 
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+bool isDevelopment = builder.Environment.IsDevelopment();
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Information)
-    .MinimumLevel.Information()
+    .MinimumLevel.Is(isDevelopment ? LogEventLevel.Information : LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .Enrich.WithEnvironmentName()
     .Enrich.WithMachineName()
@@ -38,8 +42,6 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"
     ))
     .CreateLogger();
-
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog();
 
