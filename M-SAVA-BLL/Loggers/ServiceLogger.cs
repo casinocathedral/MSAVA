@@ -126,7 +126,7 @@ namespace M_SAVA_BLL.Loggers
             };
             string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, GroupId: {GroupId}", actionString, message, userId, groupId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, GroupId: {GroupId}", actionString, sanitizedMessage, userId, groupId);
             _groupLogRepository.Insert(groupLog);
             _groupLogRepository.Commit();
         }
@@ -143,7 +143,7 @@ namespace M_SAVA_BLL.Loggers
             };
             string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, message, userId, fileNameWithExtension, refId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, File: {fileNameWithExtension}, FileRefId: {refId}", actionString, sanitizedMessage, userId, fileNameWithExtension, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
         }
@@ -159,7 +159,7 @@ namespace M_SAVA_BLL.Loggers
             };
             string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, FileRefId: {refId}", actionString, message, userId, refId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, FileRefId: {refId}", actionString, sanitizedMessage, userId, refId);
             _accessLogRepository.Insert(accessLog);
             _accessLogRepository.Commit();
         }
@@ -175,7 +175,7 @@ namespace M_SAVA_BLL.Loggers
             };
             string sanitizedMessage = SanitizeMessage(message);
             string actionString = action.ToString();
-            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, AdminId: {AdminId}", actionString, message, userId, adminId);
+            _logger.LogInformation("Action: {Action}, Message: {Message}, UserId: {UserId}, AdminId: {AdminId}", actionString, sanitizedMessage, userId, adminId);
 
             _userLogRepository.Insert(userLog);
             _userLogRepository.Commit();
