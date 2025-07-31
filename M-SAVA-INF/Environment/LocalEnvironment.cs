@@ -22,52 +22,76 @@ namespace M_SAVA_INF.Environment
             _values = LoadEnvFile(EnvFilePath);
             Values = new LocalEnvironmentValues
             {
-                JwtIssuerSigningKey = GetValueOrDefault("jwt_issuer_signing_key"),
-                JwtIssuerName = GetValueOrDefault("jwt_issuer_name"),
-                JwtIssuerAudience = GetValueOrDefault("jwt_issuer_audience"),
-                AdminUsername = GetValueOrDefault("admin_username"),
-                AdminPassword = GetValueOrDefault("admin_password"),
-                PostgresBaseDbUser = GetValueOrDefault("postgres_basedb_user"),
-                PostgresBaseDbPassword = GetValueOrDefault("postgres_basedb_password"),
-                PostgresBaseDbHost = GetValueOrDefault("postgres_basedb_host"),
-                PostgresBaseDbPort = int.TryParse(GetValueOrDefault("postgres_basedb_port"), out var port) ? port : 0,
-                PostgresBaseDbDbName = GetValueOrDefault("postgres_basedb_dbname"),
-                PostgresBaseDbSslMode = GetValueOrDefault("postgres_basedb_ssl_mode"),
-                SerilogInformationLevel = ParseLogEventLevel(GetValueOrDefault("serilog_information_level")),
-                SerilogRollingInterval = ParseRollingInterval(GetValueOrDefault("serilog_rolling_interval")),
-                SerilogRetainedFileCountLimit = ParseNullableInt(GetValueOrDefault("serilog_retained_file_count_limit")),
-                SerilogFileSizeLimitBytes = long.TryParse(GetValueOrDefault("serilog_file_size_limit_bytes"), out var fsl) ? fsl : 10 * 1024 * 1024,
-                SerilogRollOnFileSizeLimit = bool.TryParse(GetValueOrDefault("serilog_roll_on_file_size_limit"), out var roll) ? roll : true
+                JwtIssuerSigningKey = GetRequiredValue("jwt_issuer_signing_key"),
+                JwtIssuerName = GetRequiredValue("jwt_issuer_name"),
+                JwtIssuerAudience = GetRequiredValue("jwt_issuer_audience"),
+                AdminUsername = GetRequiredValue("admin_username"),
+                AdminPassword = GetRequiredValue("admin_password"),
+                PostgresBaseDbUser = GetRequiredValue("postgres_basedb_user"),
+                PostgresBaseDbPassword = GetRequiredValue("postgres_basedb_password"),
+                PostgresBaseDbHost = GetRequiredValue("postgres_basedb_host"),
+                PostgresBaseDbPort = ParseRequiredInt("postgres_basedb_port"),
+                PostgresBaseDbDbName = GetRequiredValue("postgres_basedb_dbname"),
+                PostgresBaseDbSslMode = GetRequiredValue("postgres_basedb_ssl_mode"),
+                SerilogInformationLevel = ParseRequiredEnum<LogEventLevel>("serilog_information_level"),
+                SerilogRollingInterval = ParseRequiredEnum<RollingInterval>("serilog_rolling_interval"),
+                SerilogRetainedFileCountLimit = ParseNullableInt(GetRequiredValue("serilog_retained_file_count_limit")),
+                SerilogFileSizeLimitBytes = ParseRequiredLong("serilog_file_size_limit_bytes"),
+                SerilogRollOnFileSizeLimit = ParseRequiredBool("serilog_roll_on_file_size_limit")
             };
         }
 
-        public static LocalEnvironment GetInstance()
+        private string GetRequiredValue(string key)
         {
-            return Instance;
+            if (_values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+                return value;
+            throw new InvalidOperationException($"Required environment variable '{key}' is missing or empty in {EnvFileName}");
         }
 
-        private static LogEventLevel ParseLogEventLevel(string value)
+        private int ParseRequiredInt(string key)
         {
-            return Enum.TryParse(value, true, out LogEventLevel lvl) ? lvl : LogEventLevel.Information;
+            var value = GetRequiredValue(key);
+            if (int.TryParse(value, out var result))
+                return result;
+            throw new InvalidOperationException($"Environment variable '{key}' could not be parsed as int: '{value}'");
         }
 
-        private static RollingInterval ParseRollingInterval(string value)
+        private long ParseRequiredLong(string key)
         {
-            return Enum.TryParse(value, true, out RollingInterval ri) ? ri : RollingInterval.Day;
+            var value = GetRequiredValue(key);
+            if (long.TryParse(value, out var result))
+                return result;
+            throw new InvalidOperationException($"Environment variable '{key}' could not be parsed as long: '{value}'");
+        }
+
+        private bool ParseRequiredBool(string key)
+        {
+            var value = GetRequiredValue(key);
+            if (bool.TryParse(value, out var result))
+                return result;
+            throw new InvalidOperationException($"Environment variable '{key}' could not be parsed as bool: '{value}'");
+        }
+
+        private TEnum ParseRequiredEnum<TEnum>(string key) where TEnum : struct
+        {
+            var value = GetRequiredValue(key);
+            if (Enum.TryParse<TEnum>(value, true, out var result))
+                return result;
+            throw new InvalidOperationException($"Environment variable '{key}' could not be parsed as {typeof(TEnum).Name}: '{value}'");
         }
 
         private static int? ParseNullableInt(string value)
         {
             if (string.IsNullOrWhiteSpace(value) || value.ToLowerInvariant() == "null")
                 return null;
-            return int.TryParse(value, out var i) ? i : null;
+            if (int.TryParse(value, out var i))
+                return i;
+            throw new InvalidOperationException($"Environment variable for nullable int could not be parsed: '{value}'");
         }
 
-        private string GetValueOrDefault(string key)
+        public static LocalEnvironment GetInstance()
         {
-            if (_values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-                return value;
-            return string.Empty;
+            return Instance;
         }
 
         public static bool IsDevelopment()
