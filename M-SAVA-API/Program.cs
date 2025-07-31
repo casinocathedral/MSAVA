@@ -102,8 +102,9 @@ string baseDbConnectionString = $"Host={env.GetValue("postgres_basedb_host")};Po
 builder.Services.AddDbContext<BaseDataContext>(options =>
     options.UseNpgsql(baseDbConnectionString));
 
-// Register IHttpContextAccessor
+// Register HTTP services
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
