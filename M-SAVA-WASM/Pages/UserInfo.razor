@@ -1,0 +1,71 @@
+@page "/userinfo"
+@inject HttpClient Http
+
+<PageTitle>User Info</PageTitle>
+
+<h1>User Info</h1>
+
+@if (user == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <tr>
+            <th>Id</th>
+            <td>@user.Id</td>
+        </tr>
+        <tr>
+            <th>Username</th>
+            <td>@user.Username</td>
+        </tr>
+        <tr>
+            <th>Created At</th>
+            <td>@user.CreatedAt</td>
+        </tr>
+        <tr>
+            <th>Is Admin</th>
+            <td>@user.IsAdmin</td>
+        </tr>
+        <tr>
+            <th>Is Banned</th>
+            <td>@user.IsBanned</td>
+        </tr>
+        <tr>
+            <th>Is Whitelisted</th>
+            <td>@user.IsWhitelisted</td>
+        </tr>
+    </table>
+}
+
+@code {
+    private UserDTO? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://localhost:7029/api/users/me");
+        // Tokens beneath is temp, don't worry
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1YTRmZjk5Ny1iNTJiLTQ0ZDMtODFjYi0wYTE0ZmU4MGNjM2YiLCJ1bmlxdWVfbmFtZSI6IkFkbWluIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjpbIkFkbWluIiwiV2hpdGVsaXN0ZWQiXSwiaW52aXRlQ29kZSI6IiIsImFjY2Vzc0dyb3VwcyI6IiIsIm5iZiI6MTc1NDE1MTcwOSwiZXhwIjoxNzU0MTU4OTA5LCJpc3MiOiJNU0FWQSIsImF1ZCI6Ik1TQVZBIn0.Of7e3hOllm0LuDauI9BfA88YDh96wIUKAKfxaPRoYPM");
+
+        var response = await Http.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            user = await response.Content.ReadFromJsonAsync<UserDTO>();
+        }
+        else
+        {
+            user = null;
+        }
+    }
+
+    public class UserDTO
+    {
+        public Guid Id { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public bool IsAdmin { get; set; }
+        public bool IsBanned { get; set; }
+        public bool IsWhitelisted { get; set; }
+    }
+}
