@@ -64,6 +64,18 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorWasm",
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:7102") // Use your Blazor WASM dev URL/port
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 // Swagger setup WITH JWT SUPPORT
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -159,6 +171,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 WebApplication app = builder.Build();
+
+app.UseCors("AllowBlazorWasm");
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
